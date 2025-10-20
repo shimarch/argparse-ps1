@@ -56,7 +56,9 @@ def test_generate_wrapper_with_skip_dests():
         script_path = Path(tmpdir) / "test.py"
         script_path.write_text("# Test", encoding="utf-8")
 
-        ps1_path = generate_ps1_wrapper(parser, script_path, Path(tmpdir), skip_dests={"make_ps1"})
+        ps1_path = generate_ps1_wrapper(
+            parser, script_path, Path(tmpdir), skip_dests={"make_ps1"}
+        )
 
         content = ps1_path.read_text(encoding="utf-8")
         # make_ps1 should not be in the generated script

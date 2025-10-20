@@ -109,9 +109,15 @@ def _generate_ps1_content(
 
             # Check if it's a boolean flag by action name
             action_type = type(action).__name__
-            if action_type in ("_StoreTrueAction", "_StoreFalseAction") or action.type is None and action.nargs == 0:
+            if (
+                action_type in ("_StoreTrueAction", "_StoreFalseAction")
+                or action.type is None
+                and action.nargs == 0
+            ):
                 # Boolean flag
-                arg_mappings.append(f'    if (${param_name}) {{\n        $pythonArgs += "{option_string}"\n    }}')
+                arg_mappings.append(
+                    f'    if (${param_name}) {{\n        $pythonArgs += "{option_string}"\n    }}'
+                )
             elif action.type is not None:
                 # Value argument
                 arg_mappings.append(
