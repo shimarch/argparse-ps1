@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "argparse-ps1-wrapper"
+version = "0.1.0"
+description = "Generate PowerShell wrapper scripts from Python argparse parsers"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Shimarch"}
+]
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: System :: Shells",
+    "Operating System :: OS Independent",
+]
+keywords = ["powershell", "wrapper", "argparse", "code-generation", "cli"]
+dependencies = [
+    "pytest>=8.4.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/shimarch/argparse-ps1-wrapper"
+Repository = "https://github.com/shimarch/argparse-ps1-wrapper"
+Issues = "https://github.com/shimarch/argparse-ps1-wrapper/issues"
+Documentation = "https://github.com/shimarch/argparse-ps1-wrapper#readme"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]

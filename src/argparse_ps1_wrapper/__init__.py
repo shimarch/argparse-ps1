@@ -1,0 +1,16 @@
+"""argparse-ps1-wrapper: Generate PowerShell wrapper scripts from Python argparse parsers.
+
+This library provides functionality to automatically generate PowerShell (.ps1) wrapper
+scripts from Python scripts that use argparse for command-line argument parsing.
+
+The generated PowerShell scripts provide a native PowerShell interface while internally
+invoking the Python script with the appropriate arguments.
+"""
+
+__version__ = "0.1.0"
+__author__ = "Shimarch"
+__license__ = "MIT"
+
+from .argparse_ps1_wrapper import generate_ps1_wrapper
+
+__all__ = ["generate_ps1_wrapper"]
