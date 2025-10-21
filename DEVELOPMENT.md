@@ -201,6 +201,77 @@ TestPyPI is a separate instance of PyPI for testing package uploads without affe
    rm -rf test_env
    ```
 
+### Automated Publishing with GitHub Actions
+
+The repository includes automated publishing workflows that can deploy to TestPyPI and PyPI automatically.
+
+#### Setup GitHub Secrets
+
+1. **Generate API Tokens**:
+
+   - TestPyPI: [test.pypi.org/manage/account/token/](https://test.pypi.org/manage/account/token/)
+   - PyPI: [pypi.org/manage/account/token/](https://pypi.org/manage/account/token/)
+
+2. **Add Secrets to GitHub Repository**:
+   - Go to your repository on GitHub
+   - Settings → Secrets and variables → Actions
+   - Add the following secrets:
+     - `TEST_PYPI_API_TOKEN`: Your TestPyPI API token
+     - `PYPI_API_TOKEN`: Your PyPI API token
+
+#### Automated Deployment Triggers
+
+1. **TestPyPI Deployment** (Automatic):
+
+   ```yaml
+   # Triggers on every push to main branch
+   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+   ```
+
+   - Runs after successful tests and linting
+   - Publishes to TestPyPI automatically
+   - Uses `skip-existing: true` to avoid conflicts
+
+2. **PyPI Deployment** (Tag-based):
+   ```yaml
+   # Triggers only on version tags (e.g., v0.1.0)
+   if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+   ```
+   - Requires creating a git tag: `git tag v0.1.0 && git push origin v0.1.0`
+   - Only runs after successful TestPyPI deployment
+   - Publishes to production PyPI
+
+#### Manual Release Process
+
+1. **Update version** in `pyproject.toml`:
+
+   ```toml
+   version = "0.1.1"  # Increment version
+   ```
+
+2. **Commit and push changes**:
+
+   ```bash
+   git add pyproject.toml
+   git commit -m "Bump version to 0.1.1"
+   git push origin main
+   ```
+
+   ✅ **This automatically triggers TestPyPI deployment**
+
+3. **Create and push tag for PyPI release**:
+   ```bash
+   git tag v0.1.1
+   git push origin v0.1.1
+   ```
+   ✅ **This automatically triggers PyPI deployment**
+
+#### Monitoring Deployments
+
+- **GitHub Actions**: Check the "Actions" tab for deployment status
+- **TestPyPI**: [test.pypi.org/project/argparse-ps1-wrapper/](https://test.pypi.org/project/argparse-ps1-wrapper/)
+- **PyPI**: [pypi.org/project/argparse-ps1-wrapper/](https://pypi.org/project/argparse-ps1-wrapper/)
+
 ### Production PyPI
 
 After successful testing on TestPyPI:
