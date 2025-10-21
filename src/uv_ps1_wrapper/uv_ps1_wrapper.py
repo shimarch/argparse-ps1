@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import argparse
 import tomllib
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Sequence
 
 __all__ = ["generate_ps1_wrapper"]
 
 
-def _find_command_name_from_pyproject(script_path: Path, project_root: Path) -> str | None:
+def _find_command_name_from_pyproject(
+    script_path: Path, project_root: Path
+) -> str | None:
     """Find command name from pyproject.toml [project.scripts].
 
     Args:
@@ -112,9 +114,15 @@ def generate_ps1_wrapper(
 
     if use_project_mode:
         # --project mode: use registered command
-        assert project_root is not None  # Type guard: use_project_mode implies project_root is not None
-        assert command_name is not None  # Type guard: use_project_mode implies command_name is not None
-        project_relative_path = _calculate_project_relative_path(project_root, output_path)
+        assert (
+            project_root is not None
+        )  # Type guard: use_project_mode implies project_root is not None
+        assert (
+            command_name is not None
+        )  # Type guard: use_project_mode implies command_name is not None
+        project_relative_path = _calculate_project_relative_path(
+            project_root, output_path
+        )
         unknown_args_check = _render_unknown_args_check(
             runner=runner_literal, use_project_mode=True, command_name=command_name
         )
@@ -194,7 +202,10 @@ def _render_param_block(actions: Sequence[argparse.Action]) -> str:
 
 
 def _render_unknown_args_check(
-    runner: str, use_project_mode: bool, command_name: str | None = None, script_path: Path | None = None
+    runner: str,
+    use_project_mode: bool,
+    command_name: str | None = None,
+    script_path: Path | None = None,
 ) -> str:
     """Render unknown arguments check and help handling."""
     if use_project_mode:

@@ -4,7 +4,6 @@ import argparse
 import tempfile
 from pathlib import Path
 
-import pytest
 from uv_ps1_wrapper import generate_ps1_wrapper
 
 
@@ -25,7 +24,9 @@ def test_generate_basic_wrapper():
         output_path = Path(tmpdir) / "test_script.ps1"
         script_path = Path(__file__).parent / "test_script.py"
 
-        result = generate_ps1_wrapper(parser, script_path=script_path, output_path=output_path)
+        result = generate_ps1_wrapper(
+            parser, script_path=script_path, output_path=output_path
+        )
 
         assert result == output_path
         assert output_path.exists()
@@ -68,7 +69,9 @@ def test_generate_wrapper_with_output_path():
         custom_output = Path(tmpdir) / "custom_wrapper.ps1"
         script_path = Path(__file__).parent / "test_script.py"
 
-        result = generate_ps1_wrapper(parser, script_path=script_path, output_path=custom_output)
+        result = generate_ps1_wrapper(
+            parser, script_path=script_path, output_path=custom_output
+        )
 
         assert result == custom_output
         assert custom_output.exists()

@@ -1,155 +1,97 @@
-#!/usr/bin/env python3"""Basic example of argparse-ps1-wrapper usage.
-
-"""Basic example of using uv-ps1-wrapper.
+#!/usr/bin/env python3
+"""Basic example of uv-ps1-wrapper usage.
 
 This example demonstrates:
-
-This example demonstrates how to generate a PowerShell wrapper script- Simple argument parsing with argparse
-
-for a simple Python script with basic argument types.- Generating a PowerShell wrapper script
-
-"""- Using positional and optional arguments
-
+- Simple argument parsing with argparse
+- Generating a PowerShell wrapper script
+- Using positional and optional arguments
 """
 
 import argparse
-
-from pathlib import Pathimport argparse
-
 import sys
+from pathlib import Path
 
-# Try importing from installed package, fall back to development importfrom pathlib import Path
-
+# Try importing from installed package, fall back to development import
 try:
-
-    from uv_ps1_wrapper import generate_ps1_wrappertry:
-
-except ImportError:    from argparse_ps1_wrapper import generate_ps1_wrapper
-
-    import sysexcept ImportError:
-
-    sys.path.insert(0, str(Path(__file__).parent.parent / "src"))    # If running from examples directory before installation
-
-    from uv_ps1_wrapper import generate_ps1_wrapper    sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-    from argparse_ps1_wrapper import generate_ps1_wrapper
+    from uv_ps1_wrapper import generate_ps1_wrapper
+except ImportError:
+    # If running from examples directory before installation
+    sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+    from uv_ps1_wrapper import generate_ps1_wrapper
 
 
-
-def main():
-
-    """Main function demonstrating basic wrapper generation."""def main() -> int:
-
-    parser = argparse.ArgumentParser(description="Process a file with optional verbosity")    """Main entry point."""
-
-    parser.add_argument("input_file", type=Path, help="Input file to process")    parser = argparse.ArgumentParser(
-
-    parser.add_argument("-o", "--output", type=Path, help="Output file path")        description="Process text files by converting them to uppercase"
-
-    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")    )
-
-    parser.add_argument("--make-ps1", action="store_true", help="Generate PowerShell wrapper script")
+def main() -> int:
+    """Main entry point."""
+    parser = argparse.ArgumentParser(
+        description="Process text files by converting them to uppercase"
+    )
 
     parser.add_argument(
-
-    args = parser.parse_args()        "input",
-
+        "input",
         type=Path,
-
-    if args.make_ps1:        help="Input text file to process",
-
-        # Generate PowerShell wrapper script    )
-
-        output = generate_ps1_wrapper(
-
-            parser,    parser.add_argument(
-
-            script_path=Path(__file__).resolve(),        "-o",
-
-            skip_dests={"make_ps1"},  # Skip the --make-ps1 argument itself        "--output",
-
-        )        type=Path,
-
-        print(f"Generated PowerShell wrapper: {output}")        help="Output file path (optional)",
-
-        return    )
-
-
-
-    # Normal script logic here    parser.add_argument(
-
-    print(f"Processing file: {args.input_file}")        "-v",
-
-    if args.output:        "--verbose",
-
-        print(f"Output to: {args.output}")        action="store_true",
-
-    if args.verbose:        help="Enable verbose output",
-
-        print("Verbose mode enabled")    )
-
-
+        help="Input text file to process",
+    )
 
     parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Output file path (default: input_uppercase.txt)",
+    )
 
-if __name__ == "__main__":        "--make-ps1",
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output",
+    )
 
-    main()        action="store_true",
-
-        help="Generate PowerShell wrapper script and exit",
+    parser.add_argument(
+        "--make-ps1",
+        action="store_true",
+        help="Generate PowerShell wrapper script",
     )
 
     args = parser.parse_args()
 
-    # Handle wrapper generation
     if args.make_ps1:
-        try:
-            output_path = generate_ps1_wrapper(
-                parser,
-                script_path=Path(__file__).resolve(),
-                skip_dests={"make_ps1"},
-            )
-            print(f"✅ Generated PowerShell wrapper: {output_path}")
-            print(f"\nUsage:")
-            print(f"  .\\{output_path.name} -Input data.txt")
-            print(
-                f"  .\\{output_path.name} -Input data.txt -Output result.txt -Verbose"
-            )
-            return 0
-        except Exception as e:
-            print(f"Error generating wrapper: {e}", file=sys.stderr)
-            return 1
+        # Generate PowerShell wrapper script
+        output = generate_ps1_wrapper(
+            parser,
+            script_path=Path(__file__).resolve(),
+            skip_dests={"make_ps1"},  # Skip the --make-ps1 argument itself
+        )
+        print(f"Generated PowerShell wrapper: {output}")
+        return 0
 
-    # Normal processing
+    # Process the file
     if args.verbose:
         print(f"Processing file: {args.input}")
 
-    if not args.input.exists():
-        print(f"Error: Input file not found: {args.input}", file=sys.stderr)
+    try:
+        content = args.input.read_text(encoding="utf-8")
+        uppercase_content = content.upper()
+
+        if args.output:
+            output_path = args.output
+        else:
+            output_path = args.input.with_suffix(".uppercase" + args.input.suffix)
+
+        output_path.write_text(uppercase_content, encoding="utf-8")
+
+        if args.verbose:
+            print(f"Wrote output to: {output_path}")
+        else:
+            print(str(output_path))
+
+        return 0
+
+    except FileNotFoundError:
+        print(f"Error: File not found: {args.input}", file=sys.stderr)
         return 1
-
-    # Example processing
-    content = args.input.read_text(encoding="utf-8")
-    lines = content.splitlines()
-
-    if args.verbose:
-        print(f"Read {len(lines)} lines")
-
-    # Determine output
-    if args.output is None:
-        output_file = args.input.with_stem(f"{args.input.stem}_processed")
-    else:
-        output_file = args.output
-
-    if args.verbose:
-        print(f"Writing output to: {output_file}")
-
-    # Write output (uppercase conversion)
-    output_content = "\n".join(line.upper() for line in lines)
-    output_file.write_text(output_content, encoding="utf-8")
-
-    print(f"✅ Successfully processed {args.input} → {output_file}")
-    return 0
+    except Exception as e:
+        print(f"Error processing file: {e}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
