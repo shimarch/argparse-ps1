@@ -175,6 +175,8 @@ TestPyPI is a separate instance of PyPI for testing package uploads without affe
 
 6. **Test installation from TestPyPI**:
 
+   **Using pip (traditional method):**
+
    ```bash
    # Create a fresh virtual environment for testing
    python -m venv test_env
@@ -200,6 +202,44 @@ TestPyPI is a separate instance of PyPI for testing package uploads without affe
    deactivate
    rm -rf test_env
    ```
+
+   **Using uv (modern method):**
+
+   ```bash
+   # Create a fresh virtual environment
+   uv venv test_env
+
+   # Activate the environment
+   # Windows
+   test_env\Scripts\activate
+   # Unix/macOS
+   # source test_env/bin/activate
+
+   # Install from TestPyPI with uv
+   # --default-index: Use TestPyPI as main source
+   # --index: Use regular PyPI for dependencies
+   uv pip install --default-index https://test.pypi.org/simple/ --index https://pypi.org/simple/ argparse-ps1-wrapper
+
+   # Test basic functionality
+   python -c "
+   import argparse
+   from argparse_ps1_wrapper import generate_ps1_wrapper
+   parser = argparse.ArgumentParser()
+   parser.add_argument('--test', help='Test argument')
+   print('TestPyPI installation successful!')
+   "
+
+   # Clean up
+   deactivate
+   rm -rf test_env
+   ```
+
+   **Key differences with uv:**
+
+   - `--default-index`: Specifies TestPyPI as the primary package source
+   - `--index`: Adds regular PyPI as additional source for dependencies
+   - TestPyPI often lacks dependency packages, so regular PyPI is needed for dependency resolution
+   - This approach downloads the main package from TestPyPI while resolving dependencies from regular PyPI
 
 ### Automated Publishing with GitHub Actions
 
@@ -284,6 +324,8 @@ After successful testing on TestPyPI:
 
 2. **Verify installation**:
 
+   **Using pip (traditional method):**
+
    ```bash
    # Test in a fresh environment
    python -m venv prod_test_env
@@ -294,6 +336,31 @@ After successful testing on TestPyPI:
    # source prod_test_env/bin/activate
 
    pip install argparse-ps1-wrapper
+
+   # Test functionality
+   python -c "
+   from argparse_ps1_wrapper import generate_ps1_wrapper
+   print('Production PyPI installation successful!')
+   "
+
+   # Clean up
+   deactivate
+   rm -rf prod_test_env
+   ```
+
+   **Using uv (modern method):**
+
+   ```bash
+   # Create and activate fresh environment with uv
+   uv venv prod_test_env
+
+   # Windows
+   prod_test_env\Scripts\activate
+   # Unix/macOS
+   # source prod_test_env/bin/activate
+
+   # Install from production PyPI
+   uv pip install argparse-ps1-wrapper
 
    # Test functionality
    python -c "

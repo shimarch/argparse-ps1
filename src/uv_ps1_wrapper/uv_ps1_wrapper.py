@@ -1,0 +1,406 @@
+from __future__ import annotations
+
+import argparse
+import tomllib
+from pathlib import Path
+from typing import Iterable, Sequence
+
+__all__ = ["generate_ps1_wrapper"]
+
+
+def _find_command_name_from_pyproject(script_path: Path, project_root: Path) -> str | None:
+    """Find command name from pyproject.toml [project.scripts].
+
+    Args:
+        script_path: Path to the Python script
+        project_root: Path to project root (pyproject.toml location)
+
+    Returns:
+        Command name if found, None otherwise
+    """
+    pyproject_path = project_root / "pyproject.toml"
+    if not pyproject_path.exists():
+        return None
+
+    try:
+        with pyproject_path.open("rb") as f:
+            data = tomllib.load(f)
+    except Exception:  # noqa: BLE001
+        return None
+
+    scripts = data.get("project", {}).get("scripts", {})
+    if not scripts:
+        return None
+
+    # Convert script_path to module path: "folders/folders_zip_convert.py" -> "folders.folders_zip_convert:main"
+    relative = script_path.relative_to(project_root)
+    module_path = str(relative.with_suffix("")).replace("\\", ".").replace("/", ".")
+    expected_entry = f"{module_path}:main"
+
+    # Find matching command
+    for cmd_name, entry_point in scripts.items():
+        if entry_point == expected_entry:
+            return cmd_name
+
+    return None
+
+
+def generate_ps1_wrapper(
+    parser: argparse.ArgumentParser,
+    *,
+    script_path: Path,
+    output_path: Path | None = None,
+    output_dir: Path | None = None,
+    skip_dests: Iterable[str] | None = None,
+    runner: str = "uv",
+    project_root: Path | None = None,
+    command_name: str | None = None,
+) -> Path:
+    """Generate a PowerShell wrapper script for the provided :mod:`argparse` parser.
+
+    Args:
+        parser: ArgumentParser instance to generate wrapper for
+        script_path: Path to the Python script (absolute)
+        output_path: Output path for the .ps1 file (optional)
+        output_dir: Directory where .ps1 will be placed (default: script's directory)
+        skip_dests: Parameter destinations to skip
+        runner: Command to run Python (default: "uv")
+        project_root: Path to project root (pyproject.toml location). If specified, uses --project mode.
+        command_name: Command name registered in [project.scripts]. Required if project_root is specified.
+    """
+
+    skip = {"help"}
+    if skip_dests:
+        skip.update(skip_dests)
+
+    regular_actions: list[argparse.Action] = []
+
+    for action in parser._actions:
+        if action.dest in skip:
+            continue
+        regular_actions.append(action)
+
+    # Generate PowerShell-style filename: Kebab-Case.ps1
+    if output_path is None:
+        ps1_name = _to_powershell_filename(script_path.stem)
+        if output_dir is None:
+            output_path = script_path.with_name(ps1_name).with_suffix(".ps1")
+        else:
+            output_path = output_dir / f"{ps1_name}.ps1"
+
+    # Auto-detect project root and command name if not provided
+    if project_root is None:
+        # Try to find pyproject.toml by walking up from script_path
+        current = script_path.parent
+        while current != current.parent:
+            if (current / "pyproject.toml").exists():
+                project_root = current
+                break
+            current = current.parent
+
+    # If project_root found, try to find command name
+    use_project_mode = False
+    if project_root is not None:
+        if command_name is None:
+            command_name = _find_command_name_from_pyproject(script_path, project_root)
+        if command_name is not None:
+            use_project_mode = True
+
+    param_block = _render_param_block(regular_actions)
+    argument_conversion = _render_argument_conversion(regular_actions)
+    runner_literal = runner
+
+    if use_project_mode:
+        # --project mode: use registered command
+        assert project_root is not None  # Type guard: use_project_mode implies project_root is not None
+        assert command_name is not None  # Type guard: use_project_mode implies command_name is not None
+        project_relative_path = _calculate_project_relative_path(project_root, output_path)
+        unknown_args_check = _render_unknown_args_check(
+            runner=runner_literal, use_project_mode=True, command_name=command_name
+        )
+        lines: list[str] = [
+            "#!/usr/bin/env pwsh",
+            "",
+            f"# uv run --project モード: [project.scripts] に登録されたコマンド '{command_name}' を実行",
+            "",
+            param_block,
+            unknown_args_check,
+            "# PowerShell の出力エンコーディングを UTF-8 に設定",
+            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8",
+            "$OutputEncoding = [System.Text.Encoding]::UTF8",
+            "",
+            "$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path",
+            project_relative_path,
+            "",
+            "# Python の出力エンコーディングを UTF-8 に設定",
+            '$env:PYTHONIOENCODING = "utf-8"',
+            "",
+            "# uv run --project でプロジェクトを指定して登録コマンドを実行",
+            f'$Arguments = @("run", "--project", $ProjectRoot, "{command_name}")',
+            argument_conversion,
+            f'& "{runner_literal}" @Arguments',
+            "exit $LASTEXITCODE",
+            "",
+        ]
+    else:
+        # Direct script mode: run Python file directly
+        unknown_args_check = _render_unknown_args_check(
+            runner=runner_literal, use_project_mode=False, script_path=script_path
+        )
+        lines = [
+            "#!/usr/bin/env pwsh",
+            "",
+            "# Direct script mode: Python ファイルを直接実行",
+            "",
+            param_block,
+            unknown_args_check,
+            "# PowerShell の出力エンコーディングを UTF-8 に設定",
+            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8",
+            "$OutputEncoding = [System.Text.Encoding]::UTF8",
+            "",
+            "# Python の出力エンコーディングを UTF-8 に設定",
+            '$env:PYTHONIOENCODING = "utf-8"',
+            "",
+            f'$Arguments = @("{script_path}")',
+            argument_conversion,
+            f'& "{runner_literal}" @Arguments',
+            "exit $LASTEXITCODE",
+            "",
+        ]
+
+    content = "\n".join(lines)
+    output_path.write_text(content, encoding="utf-8-sig")
+    return output_path
+
+
+def _render_param_block(actions: Sequence[argparse.Action]) -> str:
+    lines: list[str] = ["param("]
+    position_index = 0
+
+    # Add -Help parameter first
+    lines.append("    [switch]$Help,")
+
+    for index, action in enumerate(actions):
+        rendered = _render_param_line(action, position_index)
+        if not action.option_strings:
+            position_index += 1
+
+        if index < len(actions) - 1:
+            rendered += ","
+        lines.append(f"    {rendered}")
+
+    lines.append(")\n")
+    return "\n".join(lines)
+
+
+def _render_unknown_args_check(
+    runner: str, use_project_mode: bool, command_name: str | None = None, script_path: Path | None = None
+) -> str:
+    """Render unknown arguments check and help handling."""
+    if use_project_mode:
+        assert command_name is not None
+        help_command = f'$HelpArgs = @("run", "--project", $ProjectRoot, "{command_name}", "--help")'
+    else:
+        assert script_path is not None
+        help_command = f'$HelpArgs = @("{script_path}", "--help")'
+
+    return f"""
+# 未知のパラメータチェック
+if ($args.Count -gt 0) {{
+    Write-Error "Unknown parameter(s): $($args -join ', ')"
+    $Help = $true
+}}
+
+# ヘルプ表示
+if ($Help) {{
+    {help_command}
+    & "{runner}" @HelpArgs
+    exit 0
+}}
+"""
+
+
+def _render_param_line(action: argparse.Action, position_index: int) -> str:
+    name = _to_pascal_case(action.dest)
+    type_hint, default_literal = _determine_param_type_and_default(action)
+
+    parts: list[str] = []
+
+    validate_set = _render_validate_set(action)
+    if validate_set:
+        parts.append(validate_set)
+
+    parts.append(f"[{type_hint}]${name}")
+
+    if default_literal is not None:
+        parts[-1] += f" = {default_literal}"
+
+    return "\n    ".join(parts)
+
+
+def _determine_param_type_and_default(
+    action: argparse.Action,
+) -> tuple[str, str | None]:
+    # Check if action is a boolean flag by examining the action attribute
+    # Note: action.action is not a string, it's the action class itself
+    action_class = action.__class__.__name__
+    if action_class in ("_StoreTrueAction", "_StoreFalseAction"):
+        return "switch", None
+
+    python_type = action.type
+
+    if python_type is int:
+        ps_type = "int"
+    elif python_type is float:
+        ps_type = "double"
+    elif python_type is Path:
+        ps_type = "string"
+    else:
+        ps_type = "string"
+
+    if action.default in (None, argparse.SUPPRESS):
+        return ps_type, None
+
+    if isinstance(action.default, bool):
+        default_literal = "$true" if action.default else "$false"
+    elif isinstance(action.default, str):
+        default_literal = f'"{action.default}"'
+    else:
+        default_literal = str(action.default)
+
+    return ps_type, default_literal
+
+
+def _render_validate_set(action: argparse.Action) -> str | None:
+    choices = getattr(action, "choices", None)
+    if not choices:
+        return None
+    joined = '", "'.join(str(choice) for choice in choices)
+    return f'[ValidateSet("{joined}")]'
+
+
+def _render_argument_conversion(actions: Sequence[argparse.Action]) -> str:
+    lines: list[str] = []
+
+    for action in actions:
+        name = _to_pascal_case(action.dest)
+        variable = f"${name}"
+
+        if not action.option_strings:
+            # 位置引数: そのまま追加（絶対パス変換しない）
+            lines.append(f"$Arguments += {variable}")
+            continue
+
+        option = _select_option_string(action.option_strings)
+
+        # Check if action is a boolean flag by examining the action class
+        action_class = action.__class__.__name__
+        if action_class in ("_StoreTrueAction", "_StoreFalseAction"):
+            lines.append(f'if ({variable}) {{ $Arguments += "{option}" }}')
+            continue
+
+        condition = _build_assignment_condition(action, name)
+        # オプション引数: Path型の場合は絶対パスに変換
+        if action.type is Path:
+            assignment = f'$Arguments += "{option}", (Resolve-Path {variable}).Path'
+        else:
+            assignment = f'$Arguments += "{option}", {variable}'
+        lines.append(f"if ({condition}) {{ {assignment} }}")
+
+    return "\n".join(lines)
+
+
+def _select_option_string(option_strings: Sequence[str]) -> str:
+    for option in option_strings:
+        if option.startswith("--"):
+            return option
+    return option_strings[0]
+
+
+def _build_assignment_condition(action: argparse.Action, name: str) -> str:
+    variable = f"${name}"
+    python_type = action.type
+
+    if action.default in (None, argparse.SUPPRESS):
+        # デフォルトがNoneの場合
+        if python_type is int or python_type is float:
+            # 数値型: $null チェック
+            return f"$null -ne {variable}"
+        else:
+            # 文字列型: 空文字列もチェック
+            return f"-not [string]::IsNullOrEmpty({variable})"
+
+    if isinstance(action.default, bool):
+        default_literal = "$true" if action.default else "$false"
+    elif isinstance(action.default, str):
+        default_literal = f'"{action.default}"'
+    else:
+        default_literal = str(action.default)
+
+    return f"{variable} -ne {default_literal}"
+
+
+def _to_pascal_case(source: str) -> str:
+    return "".join(part.capitalize() for part in source.split("_"))
+
+
+def _to_powershell_filename(source: str) -> str:
+    """Convert Python script name to PowerShell naming convention.
+
+    Examples:
+        folders_zip_convert -> Folders-Zip-Convert
+        my_script -> My-Script
+        test_file_utils -> Test-File-Utils
+
+    Args:
+        source: Python script name (e.g., 'folders_zip_convert')
+
+    Returns:
+        PowerShell-style filename (e.g., 'Folders-Zip-Convert')
+    """
+    # Split by underscore and capitalize each part
+    parts = source.split("_")
+    capitalized_parts = [part.capitalize() for part in parts]
+    # Join with hyphen
+    return "-".join(capitalized_parts)
+
+
+def _calculate_project_relative_path(project_root: Path, output_path: Path) -> str:
+    """Calculate PowerShell Join-Path command for relative project root location.
+
+    Args:
+        project_root: Absolute path to project root (pyproject.toml location)
+        output_path: Absolute path to output .ps1 file
+
+    Returns:
+        PowerShell code line to set $ProjectRoot variable
+
+    Examples:
+        project: /scripts, output: /scripts/wrapper.ps1
+        -> $ProjectRoot = $ScriptDir
+
+        project: /scripts, output: /scripts/subdir/wrapper.ps1
+        -> $ProjectRoot = (Join-Path $ScriptDir "..")
+    """
+    import os
+
+    project_abs = project_root.resolve()
+    output_abs = output_path.resolve()
+    output_dir = output_abs.parent
+
+    # Use os.path.relpath to get relative path
+    rel_path = os.path.relpath(project_abs, output_dir)
+
+    # Convert to Path and get parts
+    parts = Path(rel_path).parts
+
+    # Build nested Join-Path
+    if not parts or parts == (".",):
+        # Same directory
+        return "$ProjectRoot = $ScriptDir"
+
+    result = "$ScriptDir"
+    for part in parts:
+        result = f'(Join-Path {result} "{part}")'
+
+    return f"$ProjectRoot = {result}"

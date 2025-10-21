@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "argparse-ps1-wrapper"
+name = "uv-ps1-wrapper"
 version = "0.1.0"
-description = "Generate PowerShell wrapper scripts from Python argparse parsers"
+description = "Generate PowerShell wrapper scripts for Python scripts executed with uv"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -24,16 +24,16 @@ classifiers = [
     "Topic :: System :: Shells",
     "Operating System :: OS Independent",
 ]
-keywords = ["powershell", "wrapper", "argparse", "code-generation", "cli"]
+keywords = ["powershell", "wrapper", "uv", "code-generation", "cli"]
 dependencies = [
     "pytest>=8.4.2",
 ]
 
 [project.urls]
-Homepage = "https://github.com/shimarch/argparse-ps1-wrapper"
-Repository = "https://github.com/shimarch/argparse-ps1-wrapper"
-Issues = "https://github.com/shimarch/argparse-ps1-wrapper/issues"
-Documentation = "https://github.com/shimarch/argparse-ps1-wrapper#readme"
+Homepage = "https://github.com/shimarch/uv-ps1-wrapper"
+Repository = "https://github.com/shimarch/uv-ps1-wrapper"
+Issues = "https://github.com/shimarch/uv-ps1-wrapper/issues"
+Documentation = "https://github.com/shimarch/uv-ps1-wrapper#readme"
 
 [project.optional-dependencies]
 test = [
