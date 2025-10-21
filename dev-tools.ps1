@@ -5,6 +5,7 @@ function Show-Help {
     Write-Host "  Install-Package          Install package in development mode" -ForegroundColor Yellow
     Write-Host "  Install-DevDependencies  Install package with development dependencies" -ForegroundColor Yellow
     Write-Host "  Invoke-Tests             Run tests" -ForegroundColor Yellow
+    Write-Host "  Invoke-TestsWithCoverage Run tests with coverage report" -ForegroundColor Yellow
     Write-Host "  Invoke-Lint              Run ruff linter" -ForegroundColor Yellow
     Write-Host "  Invoke-Format            Run black formatter and ruff formatter" -ForegroundColor Yellow
     Write-Host "  Invoke-Check             Run all checks (lint + format check)" -ForegroundColor Yellow
@@ -24,25 +25,30 @@ function Install-DevDependencies {
 
 function Invoke-Tests {
     Write-Host "Running tests..." -ForegroundColor Blue
-    python -m pytest tests/ -v
+    uv run pytest tests/ -v
+}
+
+function Invoke-TestsWithCoverage {
+    Write-Host "Running tests with coverage..." -ForegroundColor Blue
+    uv run pytest tests/ -v --cov=uv_ps1_wrapper --cov-report=term
 }
 
 function Invoke-Lint {
     Write-Host "Running ruff linter..." -ForegroundColor Blue
-    python -m ruff check src/ tests/ examples/
+    uv run ruff check src/ tests/ examples/
 }
 
 function Invoke-Format {
     Write-Host "Running formatters..." -ForegroundColor Blue
-    python -m black src/ tests/ examples/
-    python -m ruff format src/ tests/ examples/
+    uv run black src/ tests/ examples/
+    uv run ruff format src/ tests/ examples/
 }
 
 function Invoke-Check {
     Write-Host "Running all checks..." -ForegroundColor Blue
-    python -m ruff check src/ tests/ examples/
-    python -m black --check src/ tests/ examples/
-    python -m ruff format --check src/ tests/ examples/
+    uv run ruff check src/ tests/ examples/
+    uv run black --check src/ tests/ examples/
+    uv run ruff format --check src/ tests/ examples/
 }
 
 function Install-PreCommitHooks {
@@ -60,7 +66,7 @@ function Clear-BuildArtifacts {
 }
 
 # Export functions
-Export-ModuleMember -Function Show-Help, Install-Package, Install-DevDependencies, Invoke-Tests, Invoke-Lint, Invoke-Format, Invoke-Check, Install-PreCommitHooks, Clear-BuildArtifacts
+Export-ModuleMember -Function Show-Help, Install-Package, Install-DevDependencies, Invoke-Tests, Invoke-TestsWithCoverage, Invoke-Lint, Invoke-Format, Invoke-Check, Install-PreCommitHooks, Clear-BuildArtifacts
 
 # Show help by default
 Show-Help

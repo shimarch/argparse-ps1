@@ -399,19 +399,25 @@ def _calculate_project_relative_path(project_root: Path, output_path: Path) -> s
     output_abs = output_path.resolve()
     output_dir = output_abs.parent
 
-    # Use os.path.relpath to get relative path
-    rel_path = os.path.relpath(project_abs, output_dir)
+    # Check if both paths are on the same drive (Windows specific)
+    try:
+        # Try to calculate relative path
+        rel_path = os.path.relpath(project_abs, output_dir)
 
-    # Convert to Path and get parts
-    parts = Path(rel_path).parts
+        # Convert to Path and get parts
+        parts = Path(rel_path).parts
 
-    # Build nested Join-Path
-    if not parts or parts == (".",):
-        # Same directory
-        return "$ProjectRoot = $ScriptDir"
+        # Build nested Join-Path
+        if not parts or parts == (".",):
+            # Same directory
+            return "$ProjectRoot = $ScriptDir"
 
-    result = "$ScriptDir"
-    for part in parts:
-        result = f'(Join-Path {result} "{part}")'
+        result = "$ScriptDir"
+        for part in parts:
+            result = f'(Join-Path {result} "{part}")'
 
-    return f"$ProjectRoot = {result}"
+        return f"$ProjectRoot = {result}"
+
+    except ValueError:
+        # Different drives on Windows, use absolute path
+        return f'$ProjectRoot = "{project_abs}"'

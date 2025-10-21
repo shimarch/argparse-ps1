@@ -140,3 +140,37 @@ def test_project_mode():
         assert "uv run" in content
         assert "test-command" in content
         assert "--project" in content
+
+
+def test_cross_drive_paths():
+    """Test handling of paths on different drives (Windows specific)."""
+    parser = argparse.ArgumentParser(description="Test script")
+    parser.add_argument("input_file", type=Path, help="Input file")
+    parser.add_argument("--verbose", action="store_true", help="Verbose mode")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "test_cross_drive.ps1"
+        script_path = Path(__file__).resolve()
+
+        # Simulate cross-drive scenario by using absolute paths
+        if script_path.drive:  # Windows only
+            # Use a different drive letter if possible
+            project_root = (
+                Path("C:\\") if script_path.drive.upper() != "C:" else Path("D:\\")
+            )
+        else:
+            # Unix-like system, use different root
+            project_root = Path("/different/root")
+
+        # This should not raise an exception and should use absolute path fallback
+        generate_ps1_wrapper(
+            parser,
+            script_path=script_path,
+            output_path=output_path,
+            project_root=project_root,
+            command_name="test-cross-drive",
+        )
+
+        content = output_path.read_text(encoding="utf-8")
+        assert "test-cross-drive" in content
+        # Should handle the cross-drive scenario gracefully

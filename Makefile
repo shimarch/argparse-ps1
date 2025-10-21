@@ -1,6 +1,6 @@
 # uv-ps1-wrapper development Makefile
 
-.PHONY: help install install-dev test lint format check pre-commit-install clean
+.PHONY: help install install-dev test test-cov lint format check pre-commit-install clean
 
 # Default target
 help:
@@ -8,6 +8,7 @@ help:
 	@echo "  install          Install package in development mode"
 	@echo "  install-dev      Install package with development dependencies"
 	@echo "  test            Run tests"
+	@echo "  test-cov        Run tests with coverage"
 	@echo "  lint            Run ruff linter"
 	@echo "  format          Run black formatter and ruff formatter"
 	@echo "  check           Run all checks (lint + format check)"
@@ -24,22 +25,26 @@ install-dev:
 
 # Run tests
 test:
-	python -m pytest tests/ -v
+	uv run pytest tests/ -v
+
+# Run tests with coverage
+test-cov:
+	uv run pytest tests/ -v --cov=uv_ps1_wrapper --cov-report=term
 
 # Run ruff linter
 lint:
-	python -m ruff check src/ tests/ examples/
+	uv run ruff check src/ tests/ examples/
 
 # Run formatters
 format:
-	python -m black src/ tests/ examples/
-	python -m ruff format src/ tests/ examples/
+	uv run black src/ tests/ examples/
+	uv run ruff format src/ tests/ examples/
 
 # Run all checks
 check:
-	python -m ruff check src/ tests/ examples/
-	python -m black --check src/ tests/ examples/
-	python -m ruff format --check src/ tests/ examples/
+	uv run ruff check src/ tests/ examples/
+	uv run black --check src/ tests/ examples/
+	uv run ruff format --check src/ tests/ examples/
 
 # Install pre-commit hooks
 pre-commit-install:

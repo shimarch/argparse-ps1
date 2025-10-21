@@ -104,5 +104,6 @@ addopts = "-v --tb=short"
 dev = [
     "black>=25.9.0",
     "pre-commit>=4.3.0",
+    "pytest-cov>=7.0.0",
     "ruff>=0.14.1",
 ]
