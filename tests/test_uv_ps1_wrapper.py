@@ -124,14 +124,17 @@ def test_project_mode():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         output_path = Path(tmpdir) / "test_project.ps1"
-        script_path = Path(__file__).parent / "test_script.py"
         project_root = Path(tmpdir)
+        script_path = project_root / "test_script.py"
+
+        # Create a mock Python script
+        script_path.write_text('print("test")', encoding="utf-8")
 
         # Create a mock pyproject.toml with [project.scripts] section
         pyproject_content = """
 [project]
 name = "test-project"
-version = "0.1.1"
+version = "0.1.2"
 
 [project.scripts]
 test-command = "test_module:main"
@@ -144,7 +147,6 @@ test-command = "test_module:main"
             parser,
             script_path=script_path,
             output_path=output_path,
-            project_root=project_root,
             command_name="test-command",
         )
 

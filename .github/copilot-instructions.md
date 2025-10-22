@@ -14,7 +14,7 @@ uv-ps1-wrapper/
 │       └── ps1_wrapper.py      # Core generator logic
 ├── examples/
 │   ├── basic_example.py        # Simple usage example
-│   ├── advanced_example.py     # Complex usage example
+│   ├── example.py              # Complex usage example
 │   └── README.md               # Examples documentation
 ├── tests/
 │   ├── __init__.py             # Tests package
@@ -76,7 +76,7 @@ output = generate_ps1_wrapper(
    ```bash
    git init
    git add .
-   git commit -m "Initial commit: uv-ps1-wrapper v0.1.1"
+   git commit -m "Initial commit: uv-ps1-wrapper v0.1.2"
    ```
 
 2. **Create GitHub repository:**
@@ -128,7 +128,7 @@ Run the example scripts to verify functionality:
 ```bash
 cd examples
 python basic_example.py --make-ps1
-python advanced_example.py --make-ps1
+python example.py --make-ps1
 ```
 
 ### License

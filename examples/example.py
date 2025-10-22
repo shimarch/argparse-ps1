@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Basic example of uv-ps1-wrapper usage.
+"""Advanced example with string option argument.
 
 This example demonstrates:
-- Simple argument parsing with argparse
-- Generating a PowerShell wrapper script
-- Using boolean flags
+- String option arguments
+- Using uv run (default runner)
 """
 
 import argparse
@@ -22,18 +21,13 @@ except ImportError:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Simple greeting script")
+    parser = argparse.ArgumentParser(description="Advanced example with options")
 
     parser.add_argument(
-        "--hello",
-        action="store_true",
-        help="Say hello",
-    )
-
-    parser.add_argument(
-        "--bye",
-        action="store_true",
-        help="Say goodbye",
+        "-o",
+        "--option",
+        type=str,
+        help="String option argument",
     )
 
     parser.add_argument(
@@ -45,24 +39,20 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.make_ps1:
-        # Generate PowerShell wrapper script
+        # Generate PowerShell wrapper script using uv run
         output = generate_ps1_wrapper(
             parser,
             script_path=Path(__file__).resolve(),
-            skip_dests={"make_ps1"},  # Skip the --make-ps1 argument itself
+            skip_dests={"make_ps1"},
         )
         print(f"Generated PowerShell wrapper: {output}")
         return 0
 
-    # Handle greetings
-    if args.hello:
-        print("Hello World")
-
-    if args.bye:
-        print("Bye bye")
-
-    if not args.hello and not args.bye:
-        print("Use --hello or --bye to get a greeting!")
+    # Handle the option
+    if args.option:
+        print(f"Option value: {args.option}")
+    else:
+        print("No option provided. Use --option <value> to set a value.")
 
     return 0
 

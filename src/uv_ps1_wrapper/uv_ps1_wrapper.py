@@ -16,7 +16,6 @@ def generate_ps1_wrapper(
     output_dir: Path | None = None,
     skip_dests: Iterable[str] | None = None,
     runner: str = "uv",
-    project_root: Path | None = None,
     command_name: str | None = None,
 ) -> Path:
     """Generate a PowerShell wrapper script for the provided :mod:`argparse` parser.
@@ -28,8 +27,8 @@ def generate_ps1_wrapper(
         output_dir: Directory where .ps1 will be placed (default: script's directory)
         skip_dests: Parameter destinations to skip
         runner: Command to run Python (default: "uv")
-        project_root: Path to project root (pyproject.toml location). If specified, uses --project mode.
-        command_name: Command name registered in [project.scripts]. Required if project_root is specified.
+        command_name: Command name registered in [project.scripts]. If specified,
+                     automatically searches for pyproject.toml and uses --project mode.
     """
 
     skip = {"help"}
@@ -54,18 +53,18 @@ def generate_ps1_wrapper(
 
     # Determine execution mode based on runner and command_name
     use_project_mode = False
+    project_root = None
 
     if runner == "uv":
         if command_name is not None:
             # uv + command_name -> project mode (must validate)
-            if project_root is None:
-                # Find pyproject.toml by walking up from script_path
-                current = script_path.parent
-                while current != current.parent:
-                    if (current / "pyproject.toml").exists():
-                        project_root = current
-                        break
-                    current = current.parent
+            # Find pyproject.toml by walking up from script_path
+            current = script_path.parent
+            while current != current.parent:
+                if (current / "pyproject.toml").exists():
+                    project_root = current
+                    break
+                current = current.parent
 
             if project_root is None:
                 raise ValueError(

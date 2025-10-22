@@ -146,7 +146,7 @@ TestPyPI is a separate instance of PyPI for testing package uploads without affe
    ```toml
    [project]
    name = "uv-ps1-wrapper"
-   version = "0.1.1"  # Increment version
+   version = "0.1.2"  # Increment version
    ```
 
 2. **Clean previous builds**:
@@ -286,14 +286,14 @@ The repository includes automated publishing workflows that can deploy to TestPy
 1. **Update version** in `pyproject.toml`:
 
    ```toml
-   version = "0.1.1"  # Increment version
+   version = "0.1.2"  # Increment version
    ```
 
 2. **Commit and push changes**:
 
    ```bash
    git add pyproject.toml
-   git commit -m "Bump version to 0.1.1"
+   git commit -m "Bump version to 0.1.2"
    git push origin main
    ```
 
@@ -301,8 +301,8 @@ The repository includes automated publishing workflows that can deploy to TestPy
 
 3. **Create and push tag for PyPI release**:
    ```bash
-   git tag v0.1.1
-   git push origin v0.1.1
+   git tag v0.1.2
+   git push origin v0.1.2
    ```
    ✅ **This automatically triggers PyPI deployment**
 

@@ -1,102 +1,66 @@
 # Examples
 
-This directory contains example scripts demonstrating how to use `uv-ps1-wrapper`.
+This directory contains working examples of uv-ps1-wrapper usage.
 
-## Basic Example
+## Available Examples
 
-[`basic_example.py`](basic_example.py) - A simple file processor that converts text to uppercase.
+### basic_example.py
 
-**Usage:**
+Simple example with boolean flags:
 
 ```bash
-# Run the Python script
-python basic_example.py input.txt
-
-# With options
-python basic_example.py input.txt -o output.txt -v
-
-# Generate PowerShell wrapper
 python basic_example.py --make-ps1
-
-# Use the generated PowerShell wrapper
-.\basic_example.ps1 -Input input.txt -Verbose
+.\Basic-Example.ps1 -Hello
+.\Basic-Example.ps1 -Bye
 ```
 
-## Advanced Example
+### example.py
 
-[`advanced_example.py`](advanced_example.py) - A more complex script demonstrating:
-
-- Optional Path arguments- Multiple positional arguments
-
-- Various option types (string, int, float, path)
-
-Run with:- Boolean flags
-
-````bash- Choices/enums
-
-python advanced_example.py --make-ps1
-
-```**Usage:**
-
-
-
-This generates `Advanced-Example.ps1` for PowerShell use:```bash
-
-```powershell# Run the Python script
-
-.\Advanced-Example.ps1 input.txt -Count 10 -Rate 0.5 -Mode fast -Verbosepython advanced_example.py source.txt dest.txt
-
-````
-
-# With many options
-
-## Development Modepython advanced_example.py source.txt dest.txt -f yaml -t 8 --timeout 60.0 -r -v
-
-Both examples include fallback imports for development:# Generate PowerShell wrapper
-
-````pythonpython advanced_example.py --make-ps1
-
-try:
-
-    from uv_ps1_wrapper import generate_ps1_wrapper# Use the generated PowerShell wrapper
-
-except ImportError:.\advanced_example.ps1 -Source source.txt -Destination dest.txt -Format yaml -Threads 8 -Recursive -Verbose
-
-    import sys```
-
-    sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-    from uv_ps1_wrapper import generate_ps1_wrapper## Running Examples
-
-````
-
-1. **Install ps1-wrapper** (if not already installed):
-
-This allows testing without installing the package.
+Example with string options using `uv run` (default):
 
 ```bash
-pip install -e ..
+python example.py --make-ps1
+.\Advanced-Example.ps1 -Option "test value"
 ```
 
-2. **Create a test file**:
+### example_uv_project.py
+
+Example using `uv run --project` mode:
+
+```bash
+python example_uv_project.py --make-ps1
+.\Advanced-Example-Uv-Project.ps1 -Option "project mode"
+```
+
+### example_python.py
+
+Example using `python` runner instead of `uv`:
+
+```bash
+python example_python.py --make-ps1
+.\Advanced-Example-Python.ps1 -Option "python runner"
+```
+
+## Running Examples
+
+1. Navigate to the examples directory:
 
    ```bash
-   echo "hello world" > test.txt
+   cd examples
    ```
 
-3. **Run basic example**:
-
-   ```bash
-   python basic_example.py test.txt
-   ```
-
-4. **Generate wrapper**:
+2. Generate PowerShell wrappers:
 
    ```bash
    python basic_example.py --make-ps1
+   python example.py --make-ps1
+   # etc.
    ```
 
-5. **Use the wrapper** (in PowerShell):
+3. Use the generated PowerShell scripts:
    ```powershell
-   .\basic_example.ps1 -Input test.txt
+   .\Basic-Example.ps1 -Help
+   .\Advanced-Example.ps1 -Option "test"
    ```
+
+All examples include proper tab completion and help documentation in PowerShell.
