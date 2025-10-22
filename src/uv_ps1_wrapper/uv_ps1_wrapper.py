@@ -46,7 +46,7 @@ def generate_ps1_wrapper(
     if output_path is None:
         ps1_name = _to_powershell_filename(script_path.stem)
         if output_dir is None:
-            # デフォルト出力先は実行時ディレクトリ（カレント）
+            # Default output directory is current working directory
             output_path = Path.cwd() / f"{ps1_name}.ps1"
         else:
             output_path = output_dir / f"{ps1_name}.ps1"
@@ -121,21 +121,21 @@ def generate_ps1_wrapper(
         lines: list[str] = [
             "#!/usr/bin/env pwsh",
             "",
-            f"# uv run --project モード: [project.scripts] に登録されたコマンド '{command_name}' を実行",
+            f"# uv run --project mode: Execute command '{command_name}' registered in [project.scripts]",
             "",
             param_block,
             unknown_args_check,
-            "# PowerShell の出力エンコーディングを UTF-8 に設定",
+            "# Set PowerShell output encoding to UTF-8",
             "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8",
             "$OutputEncoding = [System.Text.Encoding]::UTF8",
             "",
             "$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path",
             project_relative_path,
             "",
-            "# Python の出力エンコーディングを UTF-8 に設定",
+            "# Set Python output encoding to UTF-8",
             '$env:PYTHONIOENCODING = "utf-8"',
             "",
-            "# uv run --project でプロジェクトを指定して登録コマンドを実行",
+            "# Execute registered command with uv run --project",
             f'$Arguments = @("run", "--project", $ProjectRoot, "{command_name}")',
             argument_conversion,
             f'& "{runner_literal}" @Arguments',
@@ -153,20 +153,20 @@ def generate_ps1_wrapper(
         lines = [
             "#!/usr/bin/env pwsh",
             "",
-            "# Direct script mode: Python ファイルを直接実行",
+            "# Direct script mode: Execute Python file directly",
             "",
             param_block,
             "",
-            "# スクリプトパスを設定",
+            "# Set script path",
             "$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path",
             script_relative_path,
             "",
             unknown_args_check,
-            "# PowerShell の出力エンコーディングを UTF-8 に設定",
+            "# Set PowerShell output encoding to UTF-8",
             "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8",
             "$OutputEncoding = [System.Text.Encoding]::UTF8",
             "",
-            "# Python の出力エンコーディングを UTF-8 に設定",
+            "# Set Python output encoding to UTF-8",
             '$env:PYTHONIOENCODING = "utf-8"',
             "",
             (
@@ -223,13 +223,13 @@ def _render_unknown_args_check(
             help_command = '$HelpArgs = @($ScriptPath, "--help")'
 
     return f"""
-# 未知のパラメータチェック
+# Check for unknown parameters
 if ($args.Count -gt 0) {{
     Write-Error "Unknown parameter(s): $($args -join ', ')"
     $Help = $true
 }}
 
-# ヘルプ表示
+# Display help
 if ($Help) {{
     {help_command}
     & "{runner}" @HelpArgs
@@ -305,7 +305,7 @@ def _render_argument_conversion(actions: Sequence[argparse.Action]) -> str:
         variable = f"${name}"
 
         if not action.option_strings:
-            # 位置引数: そのまま追加（絶対パス変換しない）
+            # Positional arguments: Add as-is (no absolute path conversion)
             lines.append(f"$Arguments += {variable}")
             continue
 
@@ -318,7 +318,7 @@ def _render_argument_conversion(actions: Sequence[argparse.Action]) -> str:
             continue
 
         condition = _build_assignment_condition(action, name)
-        # オプション引数: Path型の場合は絶対パスに変換
+        # Optional arguments: Convert Path type to absolute path
         if action.type is Path:
             assignment = f'$Arguments += "{option}", (Resolve-Path {variable}).Path'
         else:
@@ -340,12 +340,12 @@ def _build_assignment_condition(action: argparse.Action, name: str) -> str:
     python_type = action.type
 
     if action.default in (None, argparse.SUPPRESS):
-        # デフォルトがNoneの場合
+        # When default is None
         if python_type is int or python_type is float:
-            # 数値型: $null チェック
+            # Numeric type: $null check
             return f"$null -ne {variable}"
         else:
-            # 文字列型: 空文字列もチェック
+            # String type: also check for empty string
             return f"-not [string]::IsNullOrEmpty({variable})"
 
     if isinstance(action.default, bool):

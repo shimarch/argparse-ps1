@@ -1,481 +1,183 @@
 # Development Guide
 
-This document provides detailed instructions for developing and publishing the `uv-ps1-wrapper` package.
+This document provides detailed instructions for developing and publishing the `uv-ps1-wrapper` package using modern Python tooling with `uv`.
 
 ## Development Setup
 
-### 1. Environment Setup
+### 1. Prerequisites
+
+- [uv](https://docs.astral.sh/uv/) - Fast Python package manager
+- Python 3.11+ (uv will manage Python versions for you)
+
+### 2. Environment Setup
 
 ```bash
 # Clone the repository
 git clone https://github.com/shimarch/uv-ps1-wrapper.git
 cd uv-ps1-wrapper
 
-# Install in development mode with optional dependencies
-pip install -e ".[dev,test]"
+# Install in development mode with dependencies
+uv sync --all-extras
 ```
 
-### 2. Running Tests
+### 3. Running Tests
 
 ```bash
 # Run all tests
-python -m pytest
+uv run pytest tests/ -v
 
 # Run tests with coverage
-python -m pytest --cov=uv_ps1_wrapper --cov-report=html
+uv run pytest tests/ -v --cov=uv_ps1_wrapper --cov-report=html
 
 # Run specific test
-python -m pytest tests/test_uv_ps1_wrapper.py::test_import -v
+uv run pytest tests/test_uv_ps1_wrapper.py::test_import -v
+
+# Run tests with coverage report
+uv run pytest tests/ -v --cov=uv_ps1_wrapper --cov-report=term
 ```
 
-### 3. Code Quality
+### 4. Code Quality
+
+Code quality checks are automatically enforced by pre-commit hooks. You can also run them manually:
 
 ```bash
 # Format code with black
-python -m black src tests
+uv run black src tests examples
 
 # Lint with ruff
-python -m ruff check src tests
+uv run ruff check src tests examples
 
 # Fix linting issues automatically
-python -m ruff check --fix src tests
+uv run ruff check --fix src tests examples
+
+# Format with ruff
+uv run ruff format src tests examples
+
+# Run all checks
+uv run ruff check src tests examples
+uv run black --check src tests examples
+uv run ruff format --check src tests examples
 ```
 
-## Publishing Workflow
+_Note: These checks run automatically on every commit via pre-commit hooks._
 
-### TestPyPI (Testing Environment)
+## Pre-commit Hooks
 
-TestPyPI is a separate instance of PyPI for testing package uploads without affecting the production PyPI index.
+Pre-commit hooks ensure code quality before each commit by automatically running formatters and linters.
 
-#### Setup
+```bash
+# Install pre-commit hooks (one-time setup)
+uv run pre-commit install
 
-1. **Register accounts**:
+# Run pre-commit on all files manually
+uv run pre-commit run --all-files
 
-   - Production PyPI: [pypi.org/account/register/](https://pypi.org/account/register/)
-   - Test PyPI: [test.pypi.org/account/register/](https://test.pypi.org/account/register/)
+# Pre-commit hooks will automatically run on each git commit
+# If hooks fail, fix the issues and commit again
+```
 
-2. **Generate API tokens**:
+## Version Management and Publishing
 
-   - Production: [pypi.org/manage/account/token/](https://pypi.org/manage/account/token/)
-   - TestPyPI: [test.pypi.org/manage/account/token/](https://test.pypi.org/manage/account/token/)
+### 1. Version Update Process
 
-3. **Configure authentication** in `~/.pypirc`:
+When ready to release a new version:
 
-   ```ini
-   [distutils]
-   index-servers =
-       pypi
-       testpypi
-
-   [pypi]
-   username = __token__
-   password = pypi-YOUR_PRODUCTION_API_TOKEN_HERE
-
-   [testpypi]
-   repository = https://test.pypi.org/legacy/
-   username = __token__
-   password = pypi-YOUR_TEST_API_TOKEN_HERE
-   ```
-
-### Security Considerations
-
-**Important**: PyPI packages are **immutable and access-controlled**. Understanding security is crucial:
-
-#### Package Ownership and Access Control
-
-1. **Package Names**: First-come, first-served basis
-
-   - Once you register `uv-ps1-wrapper`, no one else can use this exact name
-   - Package names are case-insensitive and treat hyphens/underscores as equivalent
-
-2. **Access Permissions**:
-
-   - **Owner**: Full control (you, as the package creator)
-   - **Maintainer**: Can upload new versions (granted by Owner)
-   - **No public write access**: Random users cannot modify your package
-
-3. **Version Immutability**:
-   - Once uploaded, a specific version (e.g., `0.1.0`) cannot be changed or deleted
-   - Only new versions can be published
-   - This ensures reproducible installations
-
-#### Security Best Practices
-
-1. **Account Security**:
-
-   ```bash
-   # Enable 2FA on your PyPI account (highly recommended)
-   # Use strong, unique passwords
-   # Regularly rotate API tokens
-   ```
-
-2. **API Token Management**:
-
-   - Use scoped tokens (project-specific rather than global)
-   - Store tokens securely (never in version control)
-   - Rotate tokens periodically
-
-3. **Package Verification**:
-
-   ```bash
-   # Always verify what you're uploading
-   python -m twine check dist/*
-
-   # Check package contents
-   python -m zipfile -l dist/*.whl
-   ```
-
-4. **Code Signing** (Advanced):
-   ```bash
-   # Consider using sigstore for package signing (optional)
-   pip install sigstore
-   python -m sigstore sign dist/*
-   ```
-
-#### Common Security Threats
-
-1. **Account Compromise**: Protect your PyPI credentials
-2. **Typosquatting**: Be aware of similar package names
-3. **Dependency Confusion**: Verify package sources
-4. **Supply Chain Attacks**: Review dependencies regularly
-
-#### Build and Upload Process
-
-1. **Update version** in `pyproject.toml`:
+1. **Update version in `pyproject.toml`**:
 
    ```toml
    [project]
    name = "uv-ps1-wrapper"
-   version = "0.1.2"  # Increment version
+   version = "0.1.3"  # Increment version following semantic versioning
    ```
 
-2. **Clean previous builds**:
+2. **Update version in source code** (if applicable):
 
-   ```bash
-   rm -rf dist/ build/ *.egg-info/
+   ```python
+   # In src/uv_ps1_wrapper/__init__.py
+   __version__ = "0.1.3"
    ```
 
-3. **Build the package**:
+### 2. Daily Development Workflow
 
-   ```bash
-   python -m build
-   ```
-
-4. **Check the distribution**:
-
-   ```bash
-   python -m twine check dist/*
-   ```
-
-5. **Upload to TestPyPI**:
-
-   ```bash
-   python -m twine upload --repository testpypi dist/*
-   ```
-
-6. **Test installation from TestPyPI**:
-
-   **Using pip (traditional method):**
-
-   ```bash
-   # Create a fresh virtual environment for testing
-   python -m venv test_env
-
-   # Windows
-   test_env\Scripts\activate
-   # Unix/macOS
-   # source test_env/bin/activate
-
-   # Install from TestPyPI (dependencies from regular PyPI)
-   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ uv-ps1-wrapper
-
-   # Test basic functionality
-   python -c "
-   import argparse
-   from uv_ps1_wrapper import generate_ps1_wrapper
-   parser = argparse.ArgumentParser()
-   parser.add_argument('--test', help='Test argument')
-   print('TestPyPI installation successful!')
-   "
-
-   # Clean up
-   deactivate
-   rm -rf test_env
-   ```
-
-   **Using uv (modern method):**
-
-   ```bash
-   # Create a fresh virtual environment
-   uv venv test_env
-
-   # Activate the environment
-   # Windows
-   test_env\Scripts\activate
-   # Unix/macOS
-   # source test_env/bin/activate
-
-   # Install from TestPyPI with uv
-   # --default-index: Use TestPyPI as main source
-   # --index: Use regular PyPI for dependencies
-   uv pip install --default-index https://test.pypi.org/simple/ --index https://pypi.org/simple/ uv-ps1-wrapper
-
-   # Test basic functionality
-   python -c "
-   import argparse
-   from uv_ps1_wrapper import generate_ps1_wrapper
-   parser = argparse.ArgumentParser()
-   parser.add_argument('--test', help='Test argument')
-   print('TestPyPI installation successful!')
-   "
-
-   # Clean up
-   deactivate
-   rm -rf test_env
-   ```
-
-   **Key differences with uv:**
-
-   - `--default-index`: Specifies TestPyPI as the primary package source
-   - `--index`: Adds regular PyPI as additional source for dependencies
-   - TestPyPI often lacks dependency packages, so regular PyPI is needed for dependency resolution
-   - This approach downloads the main package from TestPyPI while resolving dependencies from regular PyPI
-
-### Automated Publishing with GitHub Actions
-
-The repository includes automated publishing workflows that can deploy to TestPyPI and PyPI automatically.
-
-#### Setup GitHub Secrets
-
-1. **Generate API Tokens**:
-
-   - TestPyPI: [test.pypi.org/manage/account/token/](https://test.pypi.org/manage/account/token/)
-   - PyPI: [pypi.org/manage/account/token/](https://pypi.org/manage/account/token/)
-
-2. **Add Secrets to GitHub Repository**:
-   - Go to your repository on GitHub
-   - Settings → Secrets and variables → Actions
-   - Add the following secrets:
-     - `TEST_PYPI_API_TOKEN`: Your TestPyPI API token
-     - `PYPI_API_TOKEN`: Your PyPI API token
-
-#### Automated Deployment Triggers
-
-1. **TestPyPI Deployment** (Automatic):
-
-   ```yaml
-   # Triggers on every push to main branch
-   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-   ```
-
-   - Runs after successful tests and linting
-   - Publishes to TestPyPI automatically
-   - Uses `skip-existing: true` to avoid conflicts
-
-2. **PyPI Deployment** (Tag-based):
-   ```yaml
-   # Triggers only on version tags (e.g., v0.1.0)
-   if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-   ```
-   - Requires creating a git tag: `git tag v0.1.0 && git push origin v0.1.0`
-   - Only runs after successful TestPyPI deployment
-   - Publishes to production PyPI
-
-#### Manual Release Process
-
-1. **Update version** in `pyproject.toml`:
-
-   ```toml
-   version = "0.1.2"  # Increment version
-   ```
-
-2. **Commit and push changes**:
-
-   ```bash
-   git add pyproject.toml
-   git commit -m "Bump version to 0.1.2"
-   git push origin main
-   ```
-
-   ✅ **This automatically triggers TestPyPI deployment**
-
-3. **Create and push tag for PyPI release**:
-   ```bash
-   git tag v0.1.2
-   git push origin v0.1.2
-   ```
-   ✅ **This automatically triggers PyPI deployment**
-
-#### Monitoring Deployments
-
-- **GitHub Actions**: Check the "Actions" tab for deployment status
-- **TestPyPI**: [test.pypi.org/project/uv-ps1-wrapper/](https://test.pypi.org/project/uv-ps1-wrapper/)
-- **PyPI**: [pypi.org/project/uv-ps1-wrapper/](https://pypi.org/project/uv-ps1-wrapper/)
-
-### Production PyPI
-
-After successful testing on TestPyPI:
-
-1. **Upload to production PyPI**:
-
-   ```bash
-   python -m twine upload dist/*
-   ```
-
-2. **Verify installation**:
-
-   **Using pip (traditional method):**
-
-   ```bash
-   # Test in a fresh environment
-   python -m venv prod_test_env
-
-   # Windows
-   prod_test_env\Scripts\activate
-   # Unix/macOS
-   # source prod_test_env/bin/activate
-
-   pip install uv-ps1-wrapper
-
-   # Test functionality
-   python -c "
-   from uv_ps1_wrapper import generate_ps1_wrapper
-   print('Production PyPI installation successful!')
-   "
-
-   # Clean up
-   deactivate
-   rm -rf prod_test_env
-   ```
-
-   **Using uv (modern method):**
-
-   ```bash
-   # Create and activate fresh environment with uv
-   uv venv prod_test_env
-
-   # Windows
-   prod_test_env\Scripts\activate
-   # Unix/macOS
-   # source prod_test_env/bin/activate
-
-   # Install from production PyPI
-   uv pip install uv-ps1-wrapper
-
-   # Test functionality
-   python -c "
-   from uv_ps1_wrapper import generate_ps1_wrapper
-   print('Production PyPI installation successful!')
-   "
-
-   # Clean up
-   deactivate
-   rm -rf prod_test_env
-   ```
-
-## Version Management
-
-### Semantic Versioning
-
-This project follows [Semantic Versioning](https://semver.org/):
-
-- **MAJOR** (1.0.0): Incompatible API changes
-- **MINOR** (0.1.0): New functionality in a backwards compatible manner
-- **PATCH** (0.0.1): Backwards compatible bug fixes
-
-### Pre-release Versions
-
-For testing purposes, you can use pre-release versions:
-
-```toml
-# Alpha release
-version = "0.2.0a1"
-
-# Beta release
-version = "0.2.0b1"
-
-# Release candidate
-version = "0.2.0rc1"
-```
-
-## Release Checklist
-
-- [ ] Update version in `pyproject.toml`
-- [ ] Update `CHANGELOG.md` or changelog section in `README.md`
-- [ ] Run full test suite: `python -m pytest`
-- [ ] Check code quality: `python -m ruff check src tests`
-- [ ] Build package: `python -m build`
-- [ ] Check distribution: `python -m twine check dist/*`
-- [ ] Upload to TestPyPI: `python -m twine upload --repository testpypi dist/*`
-- [ ] Test TestPyPI installation
-- [ ] Upload to production PyPI: `python -m twine upload dist/*`
-- [ ] Test production PyPI installation
-- [ ] Create GitHub release with tag
-- [ ] Update documentation if needed
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"File already exists" error**:
-
-   - You're trying to upload a version that already exists
-   - Increment the version number in `pyproject.toml`
-
-2. **Import errors after installation**:
-
-   - Check that package structure matches imports
-   - Verify `__init__.py` exports are correct
-
-3. **Authentication failures**:
-
-   - Verify API token is correct
-   - Check `~/.pypirc` configuration
-   - Ensure you're using `__token__` as username
-
-4. **Build failures**:
-
-   - Check `pyproject.toml` syntax
-   - Verify all required files are present
-   - Clean build artifacts and retry
-
-5. **Security-related issues**:
-   - **"Package name taken"**: Choose a different name, someone else registered it first
-   - **"Insufficient permissions"**: You don't have maintainer access to this package
-   - **"Invalid credentials"**: Check your API token or enable 2FA if required
-   - **"Package appears suspicious"**: PyPI may flag packages for manual review
-
-### Security Verification Commands
+#### Push to Main Branch (Automatic TestPyPI Publishing)
 
 ```bash
-# Verify package ownership before uploading
-python -c "
-import requests
-resp = requests.get('https://pypi.org/pypi/uv-ps1-wrapper/json')
-if resp.status_code == 200:
-    owner = resp.json()['info']['maintainer'] or resp.json()['info']['author']
-    print(f'Package owner: {owner}')
-else:
-    print('Package not found (available for registration)')
-"
+# After making changes and updating version
+git add .
+git commit -m "Bump version to 0.1.3 and add new features"
+git push origin main
+```
 
-# Check for similar package names (typosquatting prevention)
-pip search argparse  # Note: pip search is deprecated, use PyPI web interface
+**Result**: GitHub Actions automatically publishes to TestPyPI for testing.
 
-# Verify package integrity after installation
+#### Create Release Tag (Automatic PyPI Publishing)
+
+```bash
+# Create and push a version tag for production release
+git tag v0.1.3
+git push origin v0.1.3
+```
+
+**Result**: GitHub Actions automatically publishes to production PyPI.
+
+### 3. Package Verification
+
+#### Check TestPyPI Installation
+
+```bash
+# Test installation from TestPyPI
+uv pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ uv-ps1-wrapper
+
+# Verify functionality
+python -c "from uv_ps1_wrapper import generate_ps1_wrapper; print('TestPyPI installation successful!')"
+```
+
+#### Check PyPI Installation
+
+```bash
+# Check if package is available on PyPI
+uv pip install uv-ps1-wrapper
+
+# Verify installation
+python -c "from uv_ps1_wrapper import generate_ps1_wrapper; print('PyPI installation successful!')"
+
+# Check package information
 pip show uv-ps1-wrapper
-pip check  # Check for dependency conflicts
 ```
 
-### Useful Commands
+### 4. Build and Test Locally
 
 ```bash
-# Check package structure
-python -c "import uv_ps1_wrapper; print(uv_ps1_wrapper.__file__)"
+# Clean and build package
+uv build --clean
 
-# List package contents
+# Check distribution quality
+uv run twine check dist/*
+
+# Test wheel contents
 python -m zipfile -l dist/*.whl
 
-# Examine package metadata
-python -m twine check dist/* --strict
+# Manual upload to TestPyPI (if needed)
+uv run twine upload --repository testpypi dist/*
+
+# Manual upload to PyPI (if needed)
+uv run twine upload dist/*
+```
+
+## Clean Build Artifacts
+
+Clean build artifacts when you encounter build issues or need a fresh build environment.
+
+**When to clean:**
+
+- Build errors or inconsistent builds
+- When switching between development and production builds
+- After making changes to `pyproject.toml`
+- Troubleshooting import or packaging issues
+
+```bash
+# Clean all build artifacts
+rm -rf build/ dist/ *.egg-info/
+find . -type d -name __pycache__ -exec rm -rf {} +
+find . -type f -name "*.pyc" -delete
 ```
