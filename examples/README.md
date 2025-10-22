@@ -1,52 +1,30 @@
-# Examples# Examples
+# Examples
 
-This directory contains example scripts demonstrating how to use `uv-ps1-wrapper`.This directory contains example scripts demonstrating how to use `ps1-wrapper`.
+This directory contains example scripts demonstrating how to use `uv-ps1-wrapper`.
 
-## Basic Example## Basic Example
+## Basic Example
 
-`basic_example.py` shows a simple use case with:[`basic_example.py`](basic_example.py) - A simple file processor that converts text to uppercase.
+[`basic_example.py`](basic_example.py) - A simple file processor that converts text to uppercase.
 
-- Positional argument (Path)
+**Usage:**
 
-- Optional argument (Path)**Usage:**
+```bash
+# Run the Python script
+python basic_example.py input.txt
 
-- Boolean flag (--verbose)
-
-````bash
-
-Run with:# Run the Python script
-
-```bashpython basic_example.py input.txt
-
-python basic_example.py --make-ps1
-
-```# With options
-
+# With options
 python basic_example.py input.txt -o output.txt -v
 
-This generates `Basic-Example.ps1` which can be used in PowerShell:
-
-```powershell# Generate PowerShell wrapper
-
-.\Basic-Example.ps1 input.txt -Output output.txt -Verbosepython basic_example.py --make-ps1
-
-````
+# Generate PowerShell wrapper
+python basic_example.py --make-ps1
 
 # Use the generated PowerShell wrapper
+.\basic_example.ps1 -Input input.txt -Verbose
+```
 
-## Advanced Example.\basic_example.ps1 -Input input.txt -Verbose
+## Advanced Example
 
-````
-
-`advanced_example.py` demonstrates more complex scenarios with:
-
-- Multiple positional arguments## Advanced Example
-
-- Integer and float arguments
-
-- Choice arguments[`advanced_example.py`](advanced_example.py) - A more complex script demonstrating:
-
-- Multiple boolean flags
+[`advanced_example.py`](advanced_example.py) - A more complex script demonstrating:
 
 - Optional Path arguments- Multiple positional arguments
 
@@ -54,7 +32,7 @@ This generates `Basic-Example.ps1` which can be used in PowerShell:
 
 Run with:- Boolean flags
 
-```bash- Choices/enums
+````bash- Choices/enums
 
 python advanced_example.py --make-ps1
 

@@ -4,7 +4,7 @@
 This example demonstrates:
 - Simple argument parsing with argparse
 - Generating a PowerShell wrapper script
-- Using positional and optional arguments
+- Using boolean flags
 """
 
 import argparse
@@ -22,28 +22,18 @@ except ImportError:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Process text files by converting them to uppercase"
-    )
+    parser = argparse.ArgumentParser(description="Simple greeting script")
 
     parser.add_argument(
-        "input",
-        type=Path,
-        help="Input text file to process",
-    )
-
-    parser.add_argument(
-        "-o",
-        "--output",
-        type=Path,
-        help="Output file path (default: input_uppercase.txt)",
-    )
-
-    parser.add_argument(
-        "-v",
-        "--verbose",
+        "--hello",
         action="store_true",
-        help="Enable verbose output",
+        help="Say hello",
+    )
+
+    parser.add_argument(
+        "--bye",
+        action="store_true",
+        help="Say goodbye",
     )
 
     parser.add_argument(
@@ -64,34 +54,17 @@ def main() -> int:
         print(f"Generated PowerShell wrapper: {output}")
         return 0
 
-    # Process the file
-    if args.verbose:
-        print(f"Processing file: {args.input}")
+    # Handle greetings
+    if args.hello:
+        print("Hello World")
 
-    try:
-        content = args.input.read_text(encoding="utf-8")
-        uppercase_content = content.upper()
+    if args.bye:
+        print("byebye")
 
-        if args.output:
-            output_path = args.output
-        else:
-            output_path = args.input.with_suffix(".uppercase" + args.input.suffix)
+    if not args.hello and not args.bye:
+        print("Use --hello or --bye to get a greeting!")
 
-        output_path.write_text(uppercase_content, encoding="utf-8")
-
-        if args.verbose:
-            print(f"Wrote output to: {output_path}")
-        else:
-            print(str(output_path))
-
-        return 0
-
-    except FileNotFoundError:
-        print(f"Error: File not found: {args.input}", file=sys.stderr)
-        return 1
-    except Exception as e:
-        print(f"Error processing file: {e}", file=sys.stderr)
-        return 1
+    return 0
 
 
 if __name__ == "__main__":

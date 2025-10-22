@@ -8,45 +8,6 @@ from pathlib import Path
 __all__ = ["generate_ps1_wrapper"]
 
 
-def _find_command_name_from_pyproject(
-    script_path: Path, project_root: Path
-) -> str | None:
-    """Find command name from pyproject.toml [project.scripts].
-
-    Args:
-        script_path: Path to the Python script
-        project_root: Path to project root (pyproject.toml location)
-
-    Returns:
-        Command name if found, None otherwise
-    """
-    pyproject_path = project_root / "pyproject.toml"
-    if not pyproject_path.exists():
-        return None
-
-    try:
-        with pyproject_path.open("rb") as f:
-            data = tomllib.load(f)
-    except Exception:  # noqa: BLE001
-        return None
-
-    scripts = data.get("project", {}).get("scripts", {})
-    if not scripts:
-        return None
-
-    # Convert script_path to module path: "folders/folders_zip_convert.py" -> "folders.folders_zip_convert:main"
-    relative = script_path.relative_to(project_root)
-    module_path = str(relative.with_suffix("")).replace("\\", ".").replace("/", ".")
-    expected_entry = f"{module_path}:main"
-
-    # Find matching command
-    for cmd_name, entry_point in scripts.items():
-        if entry_point == expected_entry:
-            return cmd_name
-
-    return None
-
-
 def generate_ps1_wrapper(
     parser: argparse.ArgumentParser,
     *,
@@ -86,28 +47,60 @@ def generate_ps1_wrapper(
     if output_path is None:
         ps1_name = _to_powershell_filename(script_path.stem)
         if output_dir is None:
-            output_path = script_path.with_name(ps1_name).with_suffix(".ps1")
+            # デフォルト出力先は実行時ディレクトリ（カレント）
+            output_path = Path.cwd() / f"{ps1_name}.ps1"
         else:
             output_path = output_dir / f"{ps1_name}.ps1"
 
-    # Auto-detect project root and command name if not provided
-    if project_root is None:
-        # Try to find pyproject.toml by walking up from script_path
-        current = script_path.parent
-        while current != current.parent:
-            if (current / "pyproject.toml").exists():
-                project_root = current
-                break
-            current = current.parent
-
-    # If project_root found, try to find command name
+    # Determine execution mode based on runner and command_name
     use_project_mode = False
-    if project_root is not None:
-        if command_name is None:
-            command_name = _find_command_name_from_pyproject(script_path, project_root)
-        if command_name is not None:
-            use_project_mode = True
 
+    if runner == "uv":
+        if command_name is not None:
+            # uv + command_name -> project mode (must validate)
+            if project_root is None:
+                # Find pyproject.toml by walking up from script_path
+                current = script_path.parent
+                while current != current.parent:
+                    if (current / "pyproject.toml").exists():
+                        project_root = current
+                        break
+                    current = current.parent
+
+            if project_root is None:
+                raise ValueError(
+                    f"command_name '{command_name}' specified but no pyproject.toml found"
+                )
+
+            # Validate that command_name exists in [project.scripts]
+            pyproject_path = project_root / "pyproject.toml"
+            try:
+                with pyproject_path.open("rb") as f:
+                    data = tomllib.load(f)
+            except Exception as e:
+                raise ValueError(f"Failed to read pyproject.toml: {e}") from e
+
+            scripts = data.get("project", {}).get("scripts", {})
+            if not scripts:
+                raise ValueError("No [project.scripts] section found in pyproject.toml")
+
+            if command_name not in scripts:
+                raise ValueError(
+                    f"command_name '{command_name}' not found in [project.scripts]"
+                )
+
+            use_project_mode = True
+        # else: uv without command_name -> direct script mode with relative path
+
+    # Filter actions, excluding help and specified skip_dests
+    regular_actions = [
+        action
+        for action in parser._actions
+        if action.dest != "help"
+        and (skip_dests is None or action.dest not in skip_dests)
+    ]
+
+    # Generate PowerShell code components
     param_block = _render_param_block(regular_actions)
     argument_conversion = _render_argument_conversion(regular_actions)
     runner_literal = runner
@@ -155,12 +148,20 @@ def generate_ps1_wrapper(
         unknown_args_check = _render_unknown_args_check(
             runner=runner_literal, use_project_mode=False, script_path=script_path
         )
+        # Calculate relative path from output directory to script
+        script_relative_path = _calculate_script_relative_path(script_path, output_path)
+
         lines = [
             "#!/usr/bin/env pwsh",
             "",
             "# Direct script mode: Python ファイルを直接実行",
             "",
             param_block,
+            "",
+            "# スクリプトパスを設定",
+            "$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path",
+            script_relative_path,
+            "",
             unknown_args_check,
             "# PowerShell の出力エンコーディングを UTF-8 に設定",
             "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8",
@@ -169,7 +170,11 @@ def generate_ps1_wrapper(
             "# Python の出力エンコーディングを UTF-8 に設定",
             '$env:PYTHONIOENCODING = "utf-8"',
             "",
-            f'$Arguments = @("{script_path}")',
+            (
+                '$Arguments = @("run", $ScriptPath)'
+                if runner_literal == "uv"
+                else "$Arguments = @($ScriptPath)"
+            ),
             argument_conversion,
             f'& "{runner_literal}" @Arguments',
             "exit $LASTEXITCODE",
@@ -213,7 +218,10 @@ def _render_unknown_args_check(
         help_command = f'$HelpArgs = @("run", "--project", $ProjectRoot, "{command_name}", "--help")'
     else:
         assert script_path is not None
-        help_command = f'$HelpArgs = @("{script_path}", "--help")'
+        if runner == "uv":
+            help_command = '$HelpArgs = @("run", $ScriptPath, "--help")'
+        else:
+            help_command = '$HelpArgs = @($ScriptPath, "--help")'
 
     return f"""
 # 未知のパラメータチェック
@@ -374,6 +382,59 @@ def _to_powershell_filename(source: str) -> str:
     capitalized_parts = [part.capitalize() for part in parts]
     # Join with hyphen
     return "-".join(capitalized_parts)
+
+
+def _calculate_script_relative_path(script_path: Path, output_path: Path) -> str:
+    """Calculate PowerShell Join-Path command for relative script location.
+
+    Args:
+        script_path: Absolute path to Python script
+        output_path: Absolute path to output .ps1 file
+
+    Returns:
+        PowerShell code line to set $ScriptPath variable
+
+    Examples:
+        script: /scripts/basic_example.py, output: /scripts/Basic-Example.ps1
+        -> $ScriptPath = (Join-Path $ScriptDir "basic_example.py")
+
+        script: /scripts/subdir/script.py, output: /scripts/wrapper.ps1
+        -> $ScriptPath = (Join-Path $ScriptDir "subdir" | Join-Path -ChildPath "script.py")
+    """
+    import os
+
+    script_abs = script_path.resolve()
+    output_abs = output_path.resolve()
+    output_dir = output_abs.parent
+
+    # Check if both paths are on the same drive (Windows specific)
+    try:
+        # Try to calculate relative path
+        rel_path = os.path.relpath(script_abs, output_dir)
+
+        # Convert to Path and get parts
+        parts = Path(rel_path).parts
+
+        # Build nested Join-Path for script
+        if len(parts) == 1:
+            # Same directory
+            return f'$ScriptPath = (Join-Path $ScriptDir "{parts[0]}")'
+
+        # Multiple parts - build nested Join-Path
+        result = "$ScriptDir"
+        for i, part in enumerate(parts):
+            if i == len(parts) - 1:
+                # Last part (filename)
+                result = f'(Join-Path {result} "{part}")'
+            else:
+                # Directory part
+                result = f'(Join-Path {result} "{part}")'
+
+        return f"$ScriptPath = {result}"
+
+    except ValueError:
+        # Different drives on Windows, use absolute path
+        return f'$ScriptPath = "{script_abs}"'
 
 
 def _calculate_project_relative_path(project_root: Path, output_path: Path) -> str:

@@ -471,7 +471,7 @@ pip check  # Check for dependency conflicts
 
 ```bash
 # Check package structure
-python -c "import uv_ps1_wrapper; print(argparse_ps1_wrapper.__file__)"
+python -c "import uv_ps1_wrapper; print(uv_ps1_wrapper.__file__)"
 
 # List package contents
 python -m zipfile -l dist/*.whl
