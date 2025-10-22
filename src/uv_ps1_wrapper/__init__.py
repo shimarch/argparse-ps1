@@ -7,7 +7,7 @@ The generated PowerShell scripts provide a native PowerShell interface while int
 invoking the Python script with uv (or direct Python execution).
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Shimarch"
 __license__ = "MIT"
 
