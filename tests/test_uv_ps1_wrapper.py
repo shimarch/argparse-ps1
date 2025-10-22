@@ -131,7 +131,7 @@ def test_project_mode():
         pyproject_content = """
 [project]
 name = "test-project"
-version = "0.1.0"
+version = "0.1.1"
 
 [project.scripts]
 test-command = "test_module:main"

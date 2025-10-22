@@ -1,16 +1,16 @@
-# uv-ps1-wrapper# argparse-ps1-wrapper
+# uv-ps1-wrapper# uv-ps1-wrapper
 
 **Generate PowerShell wrapper scripts for Python scripts executed with uv\*\***Generate PowerShell wrapper scripts from Python argparse parsers\*\*
 
-[![PyPI version](https://badge.fury.io/py/uv-ps1-wrapper.svg)](https://badge.fury.io/py/uv-ps1-wrapper)[![PyPI version](https://badge.fury.io/py/argparse-ps1-wrapper.svg)](https://badge.fury.io/py/argparse-ps1-wrapper)
+[![PyPI version](https://badge.fury.io/py/uv-ps1-wrapper.svg)](https://badge.fury.io/py/uv-ps1-wrapper)[![PyPI version](https://badge.fury.io/py/uv-ps1-wrapper.svg)](https://badge.fury.io/py/uv-ps1-wrapper)
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[![CI](https://github.com/shimarch/uv-ps1-wrapper/workflows/CI/badge.svg)](https://github.com/shimarch/uv-ps1-wrapper/actions)[![CI](https://github.com/shimarch/argparse-ps1-wrapper/workflows/CI/badge.svg)](https://github.com/shimarch/argparse-ps1-wrapper/actions)
+[![CI](https://github.com/shimarch/uv-ps1-wrapper/workflows/CI/badge.svg)](https://github.com/shimarch/uv-ps1-wrapper/actions)[![CI](https://github.com/shimarch/uv-ps1-wrapper/workflows/CI/badge.svg)](https://github.com/shimarch/uv-ps1-wrapper/actions)
 
-`uv-ps1-wrapper` is a Python library that automatically generates PowerShell (.ps1) wrapper scripts for Python scripts that use `argparse` for command-line argument parsing. This allows users to interact with your Python scripts through a native PowerShell interface with proper parameter binding, tab completion, and help documentation.`argparse-ps1-wrapper` is a Python library that automatically generates PowerShell (.ps1) wrapper scripts for Python scripts that use `argparse` for command-line argument parsing. This allows users to interact with your Python scripts through a native PowerShell interface with proper parameter binding, tab completion, and help documentation.
+`uv-ps1-wrapper` is a Python library that automatically generates PowerShell (.ps1) wrapper scripts for Python scripts that use `argparse` for command-line argument parsing. This allows users to interact with your Python scripts through a native PowerShell interface with proper parameter binding, tab completion, and help documentation.`uv-ps1-wrapper` is a Python library that automatically generates PowerShell (.ps1) wrapper scripts for Python scripts that use `argparse` for command-line argument parsing. This allows users to interact with your Python scripts through a native PowerShell interface with proper parameter binding, tab completion, and help documentation.
 
 The generated wrappers use `uv` as the Python runner, making them ideal for modern Python projects.## Features
 
@@ -38,7 +38,7 @@ The generated wrappers use `uv` as the Python runner, making them ideal for mode
 
 ```bash
 
-### From PyPIpip install argparse-ps1-wrapper
+### From PyPIpip install uv-ps1-wrapper
 
 ```
 
@@ -50,9 +50,9 @@ pip install uv-ps1-wrapper### From source
 
 ````bash
 
-### From sourcegit clone https://github.com/shimarch/argparse-ps1-wrapper.git
+### From sourcegit clone https://github.com/shimarch/uv-ps1-wrapper.git
 
-cd argparse-ps1-wrapper
+cd uv-ps1-wrapper
 
 ```bashpip install -e .
 
@@ -64,7 +64,7 @@ pip install -e .## Quick Start
 
 ````
 
-Here's a simple example of how to use `argparse-ps1-wrapper`:
+Here's a simple example of how to use `uv-ps1-wrapper`:
 
 ## Quick Start
 
@@ -366,9 +366,9 @@ uv sync --all-extras## Development
 
 ```bash# Clone the repository
 
-uv run pytest tests/ -vgit clone https://github.com/shimarch/argparse-ps1-wrapper.git
+uv run pytest tests/ -vgit clone https://github.com/shimarch/uv-ps1-wrapper.git
 
-```cd argparse-ps1-wrapper
+```cd uv-ps1-wrapper
 
 
 
