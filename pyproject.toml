@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uv-ps1-wrapper"
-version = "0.1.2"
+version = "0.1.3"
 description = "Generate PowerShell wrapper scripts for Python scripts executed with uv"
 readme = "README.md"
 license = {text = "MIT"}

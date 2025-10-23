@@ -20,7 +20,7 @@ Example with string options using `uv run` (default):
 
 ```bash
 python example.py --make-ps1
-.\Advanced-Example.ps1 -Option "test value"
+.\Example.ps1 -Option "test value"
 ```
 
 ### example_uv_project.py
@@ -29,7 +29,7 @@ Example using `uv run --project` mode:
 
 ```bash
 python example_uv_project.py --make-ps1
-.\Advanced-Example-Uv-Project.ps1 -Option "project mode"
+.\Example-Uv-Project.ps1 -Option "project mode"
 ```
 
 ### example_python.py
@@ -38,7 +38,7 @@ Example using `python` runner instead of `uv`:
 
 ```bash
 python example_python.py --make-ps1
-.\Advanced-Example-Python.ps1 -Option "python runner"
+.\Example-Python.ps1 -Option "python runner"
 ```
 
 ## Running Examples
@@ -60,7 +60,7 @@ python example_python.py --make-ps1
 3. Use the generated PowerShell scripts:
    ```powershell
    .\Basic-Example.ps1 -Help
-   .\Advanced-Example.ps1 -Option "test"
+   .\Example.ps1 -Option "test"
    ```
 
 All examples include proper tab completion and help documentation in PowerShell.

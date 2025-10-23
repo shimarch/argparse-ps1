@@ -59,10 +59,10 @@ Use the PowerShell wrapper:
 
 See the [examples/](examples/) directory for complete working examples:
 
-- `basic_example.py` - Simple boolean flags
-- `advanced_example.py` - Complex arguments with options
-- `example_uv_project.py` - Project mode (requires proper pyproject.toml setup)
-- `example_python.py` - Custom runner example
+- **[basic_example.py](examples/basic_example.py)**: Simple boolean flags
+- **[example.py](examples/example.py)**: String options with `uv run`
+- **[example_uv_project.py](examples/example_uv_project.py)**: Using `uv run --project`
+- **[example_python.py](examples/example_python.py)**: Using `python` runner
 
 ### Project Mode Requirements
 
@@ -71,13 +71,6 @@ For project mode examples (`example_uv_project.py`), you need:
 1. **Proper pyproject.toml structure** with `[project.scripts]` entry
 2. **Package structure** with `__init__.py` files
 3. **Correct execution method**: Use `uv run python example_uv_project.py` instead of script entries
-
-**Note**: Project mode is complex to configure properly. For most use cases, direct execution mode is recommended.
-
-- **[basic_example.py](examples/basic_example.py)**: Simple boolean flags
-- **[example.py](examples/example.py)**: String options with `uv run`
-- **[example_uv_project.py](examples/example_uv_project.py)**: Using `uv run --project`
-- **[example_python.py](examples/example_python.py)**: Using `python` runner
 
 ## Usage Modes
 
@@ -122,7 +115,6 @@ def generate_ps1_wrapper(
     output_dir: Path | None = None,
     skip_dests: Iterable[str] | None = None,
     runner: str = "uv",
-    project_root: Path | None = None,
     command_name: str | None = None,
 ) -> Path
 ```
@@ -130,13 +122,12 @@ def generate_ps1_wrapper(
 **Parameters:**
 
 - `parser`: Your `ArgumentParser` instance
-- `script_path`: Path to your Python script
-- `output_path`: Specific output file path (optional)
-- `output_dir`: Output directory (default: current directory)
-- `skip_dests`: Argument destinations to exclude
-- `runner`: Command to run Python scripts (default: "uv")
-- `project_root`: Project root for `uv run --project` mode
-- `command_name`: Command name in `[project.scripts]`
+- `script_path`: Path to your Python script (absolute path required)
+- `output_path`: Specific output file path (optional, overrides output_dir)
+- `output_dir`: Output directory (default: current working directory)
+- `skip_dests`: Argument destinations to exclude from wrapper
+- `runner`: Command to run Python scripts (default: "uv", can be "python")
+- `command_name`: Command name in `[project.scripts]` (enables project mode for uv)
 
 ## Type Mapping
 

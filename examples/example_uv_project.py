@@ -10,13 +10,7 @@ import argparse
 import sys
 from pathlib import Path
 
-# Try importing from installed package, fall back to development import
-try:
-    from uv_ps1_wrapper import generate_ps1_wrapper
-except ImportError:
-    # If running from examples directory before installation
-    sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-    from uv_ps1_wrapper import generate_ps1_wrapper
+from uv_ps1_wrapper import generate_ps1_wrapper
 
 
 def main() -> int:
