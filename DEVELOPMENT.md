@@ -20,7 +20,25 @@ cd argparse-ps1
 uv sync --all-extras
 ```
 
-### 3. Running Tests
+### 3. Type Information
+
+This package includes type annotations and a `py.typed` file to support static type checking with tools like Pylance, mypy, and other type checkers.
+
+**Type checker setup:**
+
+- The package is marked as typed with `py.typed` file
+- VS Code/Pylance configuration is included in `.vscode/settings.json`
+- Package metadata includes `"Typing :: Typed"` classifier
+
+**Resolving type stub warnings:**
+
+If you see "stub file not found" warnings in Pylance:
+
+1. Ensure the package is installed in development mode: `uv pip install -e .`
+2. Restart VS Code language server: `Ctrl+Shift+P` → "Python: Restart Language Server"
+3. Check that `py.typed` exists in `src/argparse_ps1/`
+
+### 4. Running Tests
 
 ```bash
 # Run all tests
