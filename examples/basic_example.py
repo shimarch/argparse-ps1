@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Basic example of uv-ps1-wrapper usage.
+"""Basic example of argparse-ps1 usage.
 
 This example demonstrates:
 - Simple argument parsing with argparse
@@ -11,7 +11,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from uv_ps1_wrapper import generate_ps1_wrapper
+from argparse_ps1 import generate_ps1_wrapper
 
 
 def main() -> int:

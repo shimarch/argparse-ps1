@@ -1,13 +1,13 @@
-# uv-ps1-wrapper Project Setup
+# argparse-ps1 Project Setup
 
 ## Project Complete ✓
 
-**uv-ps1-wrapper** is a Python library for generating PowerShell wrapper scripts from Python argparse parsers.
+**argparse-ps1** is a Python library for generating PowerShell wrapper scripts from Python argparse parsers.
 
 ### Project Structure
 
 ```
-uv-ps1-wrapper/
+argparse-ps1/
 ├── src/
 │   └── argparse_ps1_wrapper/
 │       ├── __init__.py         # Package initialization
@@ -76,13 +76,13 @@ output = generate_ps1_wrapper(
    ```bash
    git init
    git add .
-   git commit -m "Initial commit: uv-ps1-wrapper v0.1.2"
+   git commit -m "Initial commit: argparse-ps1 v0.1.2"
    ```
 
 2. **Create GitHub repository:**
 
    - Go to https://github.com/new
-   - Name: `uv-ps1-wrapper`
+   - Name: `argparse-ps1`
    - Description: "Generate PowerShell wrapper scripts from Python argparse parsers"
    - Public repository
    - Don't initialize with README (we have one)
@@ -90,7 +90,7 @@ output = generate_ps1_wrapper(
 3. **Push to GitHub:**
 
    ```bash
-   git remote add origin https://github.com/shimarch/uv-ps1-wrapper.git
+   git remote add origin https://github.com/shimarch/argparse-ps1.git
    git branch -M main
    git push -u origin main
    ```

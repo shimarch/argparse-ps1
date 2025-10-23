@@ -1,13 +1,13 @@
-# uv-ps1-wrapper
+# argparse-ps1
 
 **Generate PowerShell wrapper scripts from Python argparse parsers**
 
-[![PyPI version](https://badge.fury.io/py/uv-ps1-wrapper.svg)](https://badge.fury.io/py/uv-ps1-wrapper)
+[![PyPI version](https://badge.fury.io/py/argparse-ps1.svg)](https://badge.fury.io/py/argparse-ps1)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/shimarch/uv-ps1-wrapper/workflows/CI/badge.svg)](https://github.com/shimarch/uv-ps1-wrapper/actions)
+[![CI](https://github.com/shimarch/argparse-ps1/workflows/CI/badge.svg)](https://github.com/shimarch/argparse-ps1/actions)
 
-`uv-ps1-wrapper` automatically generates PowerShell (.ps1) wrapper scripts for Python scripts that use `argparse`. This provides native PowerShell tab completion and parameter binding for your Python scripts.
+`argparse-ps1` automatically generates PowerShell (.ps1) wrapper scripts for Python scripts that use `argparse`. This provides native PowerShell tab completion and parameter binding for your Python scripts.
 
 ## Features
 
@@ -20,7 +20,7 @@
 ## Installation
 
 ```bash
-pip install uv-ps1-wrapper
+pip install argparse-ps1
 ```
 
 ## Quick Start
@@ -28,7 +28,7 @@ pip install uv-ps1-wrapper
 Add wrapper generation to your Python script:
 
 ```python
-from uv_ps1_wrapper import generate_ps1_wrapper
+from argparse_ps1 import generate_ps1_wrapper
 
 # Your existing argparse code
 parser = argparse.ArgumentParser(description="My script")
@@ -62,7 +62,7 @@ See the [examples/](examples/) directory for complete working examples:
 - **[basic_example.py](examples/basic_example.py)**: Simple boolean flags
 - **[example.py](examples/example.py)**: String options with `uv run`
 - **[example_uv_project.py](examples/example_uv_project.py)**: Using `uv run --project`
-- **[example_python.py](examples/example_python.py)**: Using `python` runner
+- **[example_python.py](examples/example_python.py)**: Using `python` runner instead of `uv`
 
 ### Project Mode Requirements
 
@@ -95,14 +95,36 @@ generate_ps1_wrapper(
 
 ### Custom Runner
 
+Use alternative Python executables instead of `uv`:
+
 ```python
+# System Python
 generate_ps1_wrapper(
     parser,
     script_path=Path(__file__),
     runner="python"
 )
 # Creates: & python script.py @args
+
+# Virtual environment Python (relative path)
+generate_ps1_wrapper(
+    parser,
+    script_path=Path(__file__),
+    runner=".venv/Scripts/python.exe"  # Windows
+    # runner=".venv/bin/python"        # Unix/macOS
+)
+# Creates: & .venv\Scripts\python.exe script.py @args
+
+# Custom Python installation (absolute path)
+generate_ps1_wrapper(
+    parser,
+    script_path=Path(__file__),
+    runner="C:/Python312/python.exe"
+)
+# Creates: & "C:/Python312/python.exe" script.py @args
 ```
+
+**Note**: See [example_python.py](examples/example_python.py) for a complete working example.
 
 ## API Reference
 

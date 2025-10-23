@@ -102,7 +102,16 @@ def generate_ps1_wrapper(
     # Generate PowerShell code components
     param_block = _render_param_block(regular_actions)
     argument_conversion = _render_argument_conversion(regular_actions)
-    runner_literal = runner
+
+    # Handle runner path resolution
+    if "/" in runner or "\\" in runner:
+        # Path specified - normalize using Path
+        runner_path = Path(runner)
+        # Normalize path separators for consistency
+        runner_literal = str(runner_path)
+    else:
+        # Simple command name
+        runner_literal = runner
 
     if use_project_mode:
         # --project mode: use registered command

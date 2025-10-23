@@ -1,6 +1,6 @@
 # Development Guide
 
-This document provides detailed instructions for developing and publishing the `uv-ps1-wrapper` package using modern Python tooling with `uv`.
+This document provides detailed instructions for developing and publishing the `argparse-ps1` package using modern Python tooling with `uv`.
 
 ## Development Setup
 
@@ -13,8 +13,8 @@ This document provides detailed instructions for developing and publishing the `
 
 ```bash
 # Clone the repository
-git clone https://github.com/shimarch/uv-ps1-wrapper.git
-cd uv-ps1-wrapper
+git clone https://github.com/shimarch/argparse-ps1.git
+cd argparse-ps1
 
 # Install in development mode with dependencies
 uv sync --all-extras
@@ -24,16 +24,16 @@ uv sync --all-extras
 
 ```bash
 # Run all tests
-uv run pytest tests/ -v
+uv run python -m pytest tests/ -v
 
 # Run tests with coverage
-uv run pytest tests/ -v --cov=uv_ps1_wrapper --cov-report=html
+uv run python -m pytest tests/ -v --cov=argparse_ps1 --cov-report=html
 
 # Run specific test
-uv run pytest tests/test_uv_ps1_wrapper.py::test_import -v
+uv run python -m pytest tests/test_argparse_ps1.py::test_import -v
 
 # Run tests with coverage report
-uv run pytest tests/ -v --cov=uv_ps1_wrapper --cov-report=term
+uv run python -m pytest tests/ -v --cov=argparse_ps1 --cov-report=term
 ```
 
 ### 4. Code Quality
@@ -67,10 +67,10 @@ Pre-commit hooks ensure code quality before each commit by automatically running
 
 ```bash
 # Install pre-commit hooks (one-time setup)
-uv run pre-commit install
+uv run python -m pre_commit install
 
 # Run pre-commit on all files manually
-uv run pre-commit run --all-files
+uv run python -m pre_commit run --all-files
 
 # Pre-commit hooks will automatically run on each git commit
 # If hooks fail, fix the issues and commit again
@@ -86,14 +86,14 @@ When ready to release a new version:
 
    ```toml
    [project]
-   name = "uv-ps1-wrapper"
+   name = "argparse-ps1"
    version = "0.1.3"  # Increment version following semantic versioning
    ```
 
 2. **Update version in source code** (if applicable):
 
    ```python
-   # In src/uv_ps1_wrapper/__init__.py
+   # In src/argparse_ps1/__init__.py
    __version__ = "0.1.3"
    ```
 
@@ -126,23 +126,23 @@ git push origin v0.1.3
 
 ```bash
 # Test installation from TestPyPI
-uv pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ uv-ps1-wrapper
+uv pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ argparse-ps1
 
 # Verify functionality
-python -c "from uv_ps1_wrapper import generate_ps1_wrapper; print('TestPyPI installation successful!')"
+python -c "from argparse_ps1 import generate_ps1_wrapper; print('TestPyPI installation successful!')"
 ```
 
 #### Check PyPI Installation
 
 ```bash
 # Check if package is available on PyPI
-uv pip install uv-ps1-wrapper
+uv pip install argparse-ps1
 
 # Verify installation
-python -c "from uv_ps1_wrapper import generate_ps1_wrapper; print('PyPI installation successful!')"
+python -c "from argparse_ps1 import generate_ps1_wrapper; print('PyPI installation successful!')"
 
 # Check package information
-pip show uv-ps1-wrapper
+pip show argparse-ps1
 ```
 
 ### 4. Build and Test Locally

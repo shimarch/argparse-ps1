@@ -1,6 +1,6 @@
 # Examples
 
-This directory contains working examples of uv-ps1-wrapper usage.
+This directory contains working examples of argparse-ps1 usage.
 
 ## Available Examples
 

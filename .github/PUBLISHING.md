@@ -44,7 +44,7 @@ TestPyPI is a separate instance of PyPI for testing package uploads without affe
 
 1. **Package Names**: First-come, first-served basis
 
-   - Once you register `uv-ps1-wrapper`, no one else can use this exact name
+   - Once you register `argparse-ps1`, no one else can use this exact name
    - Package names are case-insensitive and treat hyphens/underscores as equivalent
 
 2. **Access Permissions**:
@@ -104,7 +104,7 @@ TestPyPI is a separate instance of PyPI for testing package uploads without affe
 
    ```toml
    [project]
-   name = "uv-ps1-wrapper"
+   name = "argparse-ps1"
    version = "0.1.2"  # Increment version
    ```
 
@@ -146,12 +146,12 @@ TestPyPI is a separate instance of PyPI for testing package uploads without affe
    # source test_env/bin/activate
 
    # Install from TestPyPI with uv
-   uv pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ uv-ps1-wrapper
+   uv pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ argparse-ps1
 
    # Test basic functionality
    python -c "
    import argparse
-   from uv_ps1_wrapper import generate_ps1_wrapper
+   from argparse_ps1 import generate_ps1_wrapper
    parser = argparse.ArgumentParser()
    parser.add_argument('--test', help='Test argument')
    print('TestPyPI installation successful!')
@@ -230,8 +230,8 @@ The repository includes automated publishing workflows that can deploy to TestPy
 #### Monitoring Deployments
 
 - **GitHub Actions**: Check the "Actions" tab for deployment status
-- **TestPyPI**: [test.pypi.org/project/uv-ps1-wrapper/](https://test.pypi.org/project/uv-ps1-wrapper/)
-- **PyPI**: [pypi.org/project/uv-ps1-wrapper/](https://pypi.org/project/uv-ps1-wrapper/)
+- **TestPyPI**: [test.pypi.org/project/argparse-ps1/](https://test.pypi.org/project/argparse-ps1/)
+- **PyPI**: [pypi.org/project/argparse-ps1/](https://pypi.org/project/argparse-ps1/)
 
 ### Production PyPI
 
@@ -254,11 +254,11 @@ After successful testing on TestPyPI:
    # Unix/macOS
    # source prod_test_env/bin/activate
 
-   uv pip install uv-ps1-wrapper
+   uv pip install argparse-ps1
 
    # Test functionality
    python -c "
-   from uv_ps1_wrapper import generate_ps1_wrapper
+   from argparse_ps1 import generate_ps1_wrapper
    print('Production PyPI installation successful!')
    "
 
@@ -345,7 +345,7 @@ version = "0.2.0rc1"
 # Verify package ownership before uploading
 python -c "
 import requests
-resp = requests.get('https://pypi.org/pypi/uv-ps1-wrapper/json')
+resp = requests.get('https://pypi.org/pypi/argparse-ps1/json')
 if resp.status_code == 200:
     owner = resp.json()['info']['maintainer'] or resp.json()['info']['author']
     print(f'Package owner: {owner}')
@@ -357,7 +357,7 @@ else:
 pip search argparse  # Note: pip search is deprecated, use PyPI web interface
 
 # Verify package integrity after installation
-pip show uv-ps1-wrapper
+pip show argparse-ps1
 pip check  # Check for dependency conflicts
 ```
 
@@ -365,7 +365,7 @@ pip check  # Check for dependency conflicts
 
 ```bash
 # Check package structure
-python -c "import uv_ps1_wrapper; print(uv_ps1_wrapper.__file__)"
+python -c "import argparse_ps1; print(argparse_ps1.__file__)"
 
 # List package contents
 uv run python -m zipfile -l dist/*.whl

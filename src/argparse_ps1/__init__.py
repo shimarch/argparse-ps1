@@ -1,4 +1,4 @@
-"""uv-ps1-wrapper: Generate PowerShell wrapper scripts for Python scripts executed with uv.
+"""argparse-ps1: Generate PowerShell wrapper scripts for Python scripts executed with uv.
 
 This library provides functionality to automatically generate PowerShell (.ps1) wrapper
 scripts from Python scripts that use argparse for command-line argument parsing.
@@ -11,6 +11,6 @@ __version__ = "0.1.3"
 __author__ = "Shimarch"
 __license__ = "MIT"
 
-from .uv_ps1_wrapper import generate_ps1_wrapper
+from .argparse_ps1 import generate_ps1_wrapper
 
 __all__ = ["generate_ps1_wrapper"]

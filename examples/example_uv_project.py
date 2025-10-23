@@ -10,7 +10,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from uv_ps1_wrapper import generate_ps1_wrapper
+from argparse_ps1 import generate_ps1_wrapper
 
 
 def main() -> int:

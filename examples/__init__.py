@@ -1,1 +1,1 @@
-"""Examples for uv-ps1-wrapper."""
+"""Examples for argparse-ps1."""

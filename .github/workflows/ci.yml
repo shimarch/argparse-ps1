@@ -29,7 +29,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/ -v --cov=uv_ps1_wrapper --cov-report=xml --cov-report=term
+          pytest tests/ -v --cov=argparse_ps1 --cov-report=xml --cov-report=term
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

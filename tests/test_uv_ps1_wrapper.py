@@ -1,15 +1,15 @@
-"""Tests for uv_ps1_wrapper package."""
+"""Tests for argparse_ps1 package."""
 
 import argparse
 import tempfile
 from pathlib import Path
 
-from uv_ps1_wrapper import generate_ps1_wrapper
+from argparse_ps1 import generate_ps1_wrapper
 
 
 def test_import():
     """Test that the package can be imported."""
-    from uv_ps1_wrapper import generate_ps1_wrapper
+    from argparse_ps1 import generate_ps1_wrapper
 
     assert callable(generate_ps1_wrapper)
 
@@ -184,3 +184,153 @@ def test_cross_drive_paths():
         assert '& "uv"' in content  # Check for uv execution
         # Should handle path calculation gracefully
         assert "$ScriptPath" in content
+
+
+def test_custom_runner_parameter():
+    """Test custom runner parameter functionality (from example_python.py)."""
+    parser = argparse.ArgumentParser(description="Custom Python runner example")
+
+    parser.add_argument(
+        "-o",
+        "--option",
+        type=str,
+        help="String option argument",
+    )
+
+    parser.add_argument(
+        "--runner-type",
+        choices=["venv", "system", "custom"],
+        default="venv",
+        help="Python runner type to demonstrate",
+    )
+
+    parser.add_argument(
+        "--make-ps1",
+        action="store_true",
+        help="Generate PowerShell wrapper script",
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "test_custom_runner.ps1"
+        script_path = Path(__file__).parent / "test_script.py"
+
+        # Test with different runner configurations
+        test_cases = [
+            (".venv/Scripts/python.exe", "venv runner"),  # Relative path
+            ("python", "system runner"),  # System command
+            ("C:/Python312/python.exe", "custom runner"),  # Absolute path
+        ]
+
+        for runner, _ in test_cases:
+            result = generate_ps1_wrapper(
+                parser,
+                script_path=script_path,
+                output_path=output_path,
+                skip_dests={"make_ps1"},
+                runner=runner,
+            )
+
+            assert result == output_path
+            assert output_path.exists()
+            content = output_path.read_text(encoding="utf-8")
+
+            # Check that runner is properly quoted in the output
+            # Path normalization converts forward slashes to backslashes on Windows
+            normalized_runner = str(Path(runner))
+            assert f'& "{normalized_runner}"' in content
+
+            # Check parameter mapping
+            assert "[string]$Option" in content
+            assert "[string]$RunnerType" in content
+            # make_ps1 should be skipped
+            assert "makeps1" not in content.lower()
+            assert "make-ps1" not in content.lower()
+
+
+def test_runner_path_normalization():
+    """Test runner path normalization for Windows paths."""
+    parser = argparse.ArgumentParser(description="Test script")
+    parser.add_argument("input_file", type=Path)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "test_runner_path.ps1"
+        script_path = Path(__file__).parent / "test_script.py"
+
+        # Test various path formats
+        test_runners = [
+            "python",  # Simple command
+            "C:\\Python312\\python.exe",  # Windows absolute path
+            "C:/Python312/python.exe",  # Forward slash path
+            ".venv\\Scripts\\python.exe",  # Relative Windows path
+            ".venv/Scripts/python.exe",  # Relative forward slash path
+        ]
+
+        for runner in test_runners:
+            generate_ps1_wrapper(
+                parser, script_path=script_path, output_path=output_path, runner=runner
+            )
+
+            content = output_path.read_text(encoding="utf-8")
+
+            # Check that the runner is properly quoted
+            assert '& "' in content
+            # The runner should appear in the content
+            assert runner.replace("/", "\\") in content or runner in content
+
+
+def test_example_python_integration():
+    """Test integration with example_python.py functionality."""
+    # This mimics the behavior of example_python.py
+    parser = argparse.ArgumentParser(description="Custom Python runner example")
+
+    parser.add_argument(
+        "-o",
+        "--option",
+        type=str,
+        help="String option argument",
+    )
+
+    parser.add_argument(
+        "--runner-type",
+        choices=["venv", "system", "custom"],
+        default="venv",
+        help="Python runner type to demonstrate",
+    )
+
+    # Simulate the runner configuration logic from example_python.py
+    runner_configs = {
+        "venv": ".venv/Scripts/python.exe",
+        "system": "python",
+        "custom": "C:/Python312/python.exe",
+    }
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        script_path = Path(__file__).parent / "test_script.py"
+
+        for runner_type, runner in runner_configs.items():
+            output_path = Path(tmpdir) / f"test_{runner_type}.ps1"
+
+            result = generate_ps1_wrapper(
+                parser,
+                script_path=script_path,
+                output_path=output_path,
+                runner=runner,
+            )
+
+            assert result == output_path
+            assert output_path.exists()
+            content = output_path.read_text(encoding="utf-8")
+
+            # Verify the runner is correctly embedded
+            # Path normalization converts forward slashes to backslashes on Windows
+            normalized_runner = str(Path(runner))
+            assert f'& "{normalized_runner}"' in content
+
+            # Verify parameter structure
+            assert "param(" in content
+            assert "[string]$Option" in content
+            assert "[string]$RunnerType" in content
+
+            # Verify argument handling
+            assert "$Arguments" in content
+            assert "exit $LASTEXITCODE" in content
