@@ -10,11 +10,10 @@ dependencies = [
     { name = "pytest" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "black" },
     { name = "pre-commit" },
-    { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
@@ -23,26 +22,8 @@ test = [
     { name = "pytest-cov" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "black" },
-    { name = "pre-commit" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-]
-
 [package.metadata]
-requires-dist = [
-    { name = "black", marker = "extra == 'dev'", specifier = ">=23.0" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.0" },
-    { name = "pytest", specifier = ">=8.4.2" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
-    { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=4.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
-]
-provides-extras = ["test", "dev"]
+requires-dist = [{ name = "pytest", specifier = ">=8.4.2" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -50,6 +31,10 @@ dev = [
     { name = "pre-commit", specifier = ">=4.3.0" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
     { name = "ruff", specifier = ">=0.14.1" },
+]
+test = [
+    { name = "pytest", specifier = ">=7.0" },
+    { name = "pytest-cov", specifier = ">=4.0" },
 ]
 
 [[package]]
