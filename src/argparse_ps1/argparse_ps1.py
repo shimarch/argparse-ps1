@@ -115,12 +115,10 @@ def generate_ps1_wrapper(
 
     if use_project_mode:
         # --project mode: use registered command
-        assert (
-            project_root is not None
-        )  # Type guard: use_project_mode implies project_root is not None
-        assert (
-            command_name is not None
-        )  # Type guard: use_project_mode implies command_name is not None
+        if project_root is None:
+            raise RuntimeError("Internal error: project_root is None in project mode")
+        if command_name is None:
+            raise RuntimeError("Internal error: command_name is None in project mode")
         project_relative_path = _calculate_project_relative_path(
             project_root, output_path
         )
@@ -196,15 +194,12 @@ def generate_ps1_wrapper(
 
 def _render_param_block(actions: Sequence[argparse.Action]) -> str:
     lines: list[str] = ["param("]
-    position_index = 0
 
     # Add -Help parameter first
     lines.append("    [switch]$Help,")
 
     for index, action in enumerate(actions):
-        rendered = _render_param_line(action, position_index)
-        if not action.option_strings:
-            position_index += 1
+        rendered = _render_param_line(action)
 
         if index < len(actions) - 1:
             rendered += ","
@@ -222,10 +217,12 @@ def _render_unknown_args_check(
 ) -> str:
     """Render unknown arguments check and help handling."""
     if use_project_mode:
-        assert command_name is not None
+        if command_name is None:
+            raise RuntimeError("Internal error: command_name is None in project mode")
         help_command = f'$HelpArgs = @("run", "--project", $ProjectRoot, "{command_name}", "--help")'
     else:
-        assert script_path is not None
+        if script_path is None:
+            raise RuntimeError("Internal error: script_path is None in direct mode")
         if runner == "uv":
             help_command = '$HelpArgs = @("run", $ScriptPath, "--help")'
         else:
@@ -247,7 +244,7 @@ if ($Help) {{
 """
 
 
-def _render_param_line(action: argparse.Action, position_index: int) -> str:
+def _render_param_line(action: argparse.Action) -> str:
     name = _to_pascal_case(action.dest)
     type_hint, default_literal = _determine_param_type_and_default(action)
 
