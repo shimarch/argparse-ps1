@@ -85,10 +85,10 @@ Pre-commit hooks ensure code quality before each commit by automatically running
 
 ```bash
 # Install pre-commit hooks (one-time setup)
-uv run python -m pre_commit install
+uv run pre-commit install
 
 # Run pre-commit on all files manually
-uv run python -m pre_commit run --all-files
+uv run pre-commit run --all-files
 
 # Pre-commit hooks will automatically run on each git commit
 # If hooks fail, fix the issues and commit again

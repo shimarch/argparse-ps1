@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import tomllib
 from collections.abc import Iterable, Sequence
 from pathlib import Path
@@ -406,7 +407,6 @@ def _calculate_script_relative_path(script_path: Path, output_path: Path) -> str
         script: /scripts/subdir/script.py, output: /scripts/wrapper.ps1
         -> $ScriptPath = (Join-Path $ScriptDir "subdir" | Join-Path -ChildPath "script.py")
     """
-    import os
 
     script_abs = script_path.resolve()
     output_abs = output_path.resolve()
@@ -459,7 +459,6 @@ def _calculate_project_relative_path(project_root: Path, output_path: Path) -> s
         project: /scripts, output: /scripts/subdir/wrapper.ps1
         -> $ProjectRoot = (Join-Path $ScriptDir "..")
     """
-    import os
 
     project_abs = project_root.resolve()
     output_abs = output_path.resolve()

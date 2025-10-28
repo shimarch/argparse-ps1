@@ -9,8 +9,6 @@ from argparse_ps1 import generate_ps1_wrapper
 
 def test_import():
     """Test that the package can be imported."""
-    from argparse_ps1 import generate_ps1_wrapper
-
     assert callable(generate_ps1_wrapper)
 
 
