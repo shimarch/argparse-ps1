@@ -118,6 +118,28 @@ jobs:
           fi
           echo "✅ Tag ${{ github.ref_name }} is on main branch - proceeding with PyPI deployment"
 
+      - name: Verify version matches tag
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          TAG_VERSION="${{ github.ref_name }}"
+          TAG_VERSION="${TAG_VERSION#v}"
+
+          # Extract version from pyproject.toml
+          PYPROJECT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+
+          echo "Tag version: $TAG_VERSION"
+          echo "pyproject.toml version: $PYPROJECT_VERSION"
+
+          if [ "$TAG_VERSION" != "$PYPROJECT_VERSION" ]; then
+            echo "❌ Error: Version mismatch!"
+            echo "  Tag version: $TAG_VERSION"
+            echo "  pyproject.toml version: $PYPROJECT_VERSION"
+            echo "Please update pyproject.toml version to match the tag before creating a release."
+            exit 1
+          fi
+
+          echo "✅ Version matches: $TAG_VERSION"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
