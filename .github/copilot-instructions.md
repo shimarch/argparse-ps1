@@ -9,38 +9,48 @@
 ```
 argparse-ps1/
 ├── src/
-│   └── argparse_ps1_wrapper/
+│   └── argparse_ps1/
 │       ├── __init__.py         # Package initialization
-│       └── ps1_wrapper.py      # Core generator logic
+│       ├── argparse_ps1.py     # Core generator logic
+│       └── py.typed            # Type marker for mypy/pyright
 ├── examples/
 │   ├── basic_example.py        # Simple usage example
 │   ├── example.py              # Complex usage example
+│   ├── example_python.py       # Python runner example
+│   ├── example_uv_project.py   # UV project mode example
 │   └── README.md               # Examples documentation
 ├── tests/
 │   ├── __init__.py             # Tests package
-│   └── test_ps1_wrapper.py     # Unit tests
+│   └── test_uv_ps1_wrapper.py  # Unit tests
 ├── .github/
 │   ├── workflows/
 │   │   └── ci.yml              # GitHub Actions CI/CD
-│   └── copilot-instructions.md # This file
+│   ├── copilot-instructions.md # This file
+│   └── PUBLISHING.md           # Publishing guide
 ├── pyproject.toml              # Modern Python packaging config
 ├── README.md                   # Main documentation
 ├── LICENSE                     # MIT License
-└── .gitignore                  # Git ignore rules
+├── DEVELOPMENT.md              # Development guide
+├── .gitignore                  # Git ignore rules
+└── .pre-commit-config.yaml     # Pre-commit hooks
 ```
 
 ### Features Implemented
 
-- ✅ Core wrapper generation functionality (`ps1_wrapper.py`)
+- ✅ Core wrapper generation functionality (`argparse_ps1.py`)
 - ✅ Type mapping (int, float, Path, bool, switch)
 - ✅ Positional and optional argument support
 - ✅ Boolean flag handling
+- ✅ UV runner support with project mode
+- ✅ Python direct execution mode
 - ✅ MIT License with author Shimarch
 - ✅ Comprehensive documentation with examples
 - ✅ Modern Python packaging (src layout, Python 3.11+)
+- ✅ Full type annotations with py.typed
 - ✅ Unit tests with pytest
 - ✅ GitHub Actions CI/CD workflow
-- ✅ Development tools configuration (ruff, black)
+- ✅ Development tools configuration (ruff, black, pyright)
+- ✅ Pre-commit hooks
 - ✅ Ready for GitHub and PyPI publication
 
 ### Quick Start
@@ -54,7 +64,7 @@ pip install -e .
 **Basic Usage:**
 
 ```python
-from argparse_ps1_wrapper import generate_ps1_wrapper
+from argparse_ps1 import generate_ps1_wrapper
 import argparse
 from pathlib import Path
 
@@ -69,6 +79,32 @@ output = generate_ps1_wrapper(
 )
 ```
 
+### Development
+
+**Install development dependencies:**
+
+```bash
+pip install -e ".[dev]"
+```
+
+**Run tests:**
+
+```bash
+pytest tests/ -v
+```
+
+**Type checking:**
+
+```bash
+pyright src/
+```
+
+**Linting:**
+
+```bash
+ruff check src/ tests/
+```
+
 ### Next Steps for GitHub Publication
 
 1. **Initialize Git repository:**
@@ -76,7 +112,7 @@ output = generate_ps1_wrapper(
    ```bash
    git init
    git add .
-   git commit -m "Initial commit: argparse-ps1 v0.1.2"
+   git commit -m "Initial commit: argparse-ps1 v0.1.5"
    ```
 
 2. **Create GitHub repository:**

@@ -6,8 +6,6 @@ import tomllib
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
-__all__ = ["generate_ps1_wrapper"]
-
 
 def generate_ps1_wrapper(
     parser: argparse.ArgumentParser,

@@ -7,6 +7,9 @@ The generated PowerShell scripts provide a native PowerShell interface while int
 invoking the Python script with uv (or direct Python execution).
 """
 
+from __future__ import annotations
+
 from .argparse_ps1 import generate_ps1_wrapper
 
 __all__ = ["generate_ps1_wrapper"]
+__version__ = "0.1.5"
