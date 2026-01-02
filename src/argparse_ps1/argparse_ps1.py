@@ -7,6 +7,11 @@ from collections.abc import Iterable, Sequence
 from pathlib import Path
 
 
+def _ps_single_quoted_string(value: str) -> str:
+    escaped = value.replace("'", "''")
+    return f"'{escaped}'"
+
+
 def generate_ps1_wrapper(
     parser: argparse.ArgumentParser,
     *,
@@ -54,6 +59,19 @@ def generate_ps1_wrapper(
     use_project_mode = False
     project_root = None
 
+    # Validate runner and command_name combination
+    if command_name is not None and runner != "uv":
+        raise ValueError(
+            f"Error: command_name '{command_name}' was specified but runner is '{runner}'.\n"
+            f"\n"
+            f"  The command_name parameter requires runner='uv' to use project mode.\n"
+            f"  Current runner: {runner}\n"
+            f"\n"
+            f"Possible solutions:\n"
+            f"  1. Change runner to 'uv' to use project mode\n"
+            f"  2. Remove command_name to run the script directly with {runner}"
+        )
+
     if runner == "uv":
         if command_name is not None:
             # uv + command_name -> project mode (must validate)
@@ -66,26 +84,90 @@ def generate_ps1_wrapper(
                 current = current.parent
 
             if project_root is None:
-                raise ValueError(
-                    f"command_name '{command_name}' specified but no pyproject.toml found"
+                error_msg = (
+                    f"Error: command_name '{command_name}' was specified but pyproject.toml was not found.\n"
+                    f"\n"
+                    f"  Script path: {script_path}\n"
+                    f"  Search started from: {script_path.parent}\n"
+                    f"\n"
+                    f"Possible solutions:\n"
+                    f"  1. Ensure the script is located within a uv project directory\n"
+                    f"  2. Create pyproject.toml in the project root directory\n"
+                    f"  3. Verify the directory structure and move the script if needed"
                 )
+                raise ValueError(error_msg)
 
             # Validate that command_name exists in [project.scripts]
             pyproject_path = project_root / "pyproject.toml"
             try:
                 with pyproject_path.open("rb") as f:
                     data = tomllib.load(f)
+            except tomllib.TOMLDecodeError as e:
+                error_msg = (
+                    f"Error: Failed to read pyproject.toml (invalid TOML format)\n"
+                    f"\n"
+                    f"  File path: {pyproject_path}\n"
+                    f"  Error details: {e}\n"
+                    f"\n"
+                    f"Possible solutions:\n"
+                    f"  1. Check the syntax of pyproject.toml\n"
+                    f"  2. Validate with an online TOML validator\n"
+                    f"  3. Review recent changes and fix if necessary"
+                )
+                raise ValueError(error_msg) from e
             except Exception as e:
-                raise ValueError(f"Failed to read pyproject.toml: {e}") from e
+                error_msg = (
+                    f"Error: Unexpected error occurred while reading pyproject.toml\n"
+                    f"\n"
+                    f"  File path: {pyproject_path}\n"
+                    f"  Error type: {type(e).__name__}\n"
+                    f"  Error details: {e}\n"
+                    f"\n"
+                    f"Possible solutions:\n"
+                    f"  1. Check file read permissions\n"
+                    f"  2. Verify the file is not corrupted\n"
+                    f"  3. Ensure the file encoding is UTF-8"
+                )
+                raise ValueError(error_msg) from e
 
             scripts = data.get("project", {}).get("scripts", {})
             if not scripts:
-                raise ValueError("No [project.scripts] section found in pyproject.toml")
+                error_msg = (
+                    f"Error: [project.scripts] section not found in pyproject.toml\n"
+                    f"\n"
+                    f"  File path: {pyproject_path}\n"
+                    f"  Specified command name: {command_name}\n"
+                    f"\n"
+                    f"Possible solutions:\n"
+                    f"  1. Add the [project.scripts] section to pyproject.toml:\n"
+                    f"\n"
+                    f"     [project.scripts]\n"
+                    f'     {command_name} = "your_module:main"\n'
+                    f"\n"
+                    f"  2. Ensure the command entry point is correctly defined"
+                )
+                raise ValueError(error_msg)
 
             if command_name not in scripts:
-                raise ValueError(
-                    f"command_name '{command_name}' not found in [project.scripts]"
+                available_commands = ", ".join(
+                    f"'{cmd}'" for cmd in sorted(scripts.keys())
                 )
+                error_msg = (
+                    f"Error: command_name '{command_name}' not found in [project.scripts]\n"
+                    f"\n"
+                    f"  File path: {pyproject_path}\n"
+                    f"  Specified command name: {command_name}\n"
+                    f"  Available commands: {available_commands if scripts else '(none)'}\n"
+                    f"\n"
+                    f"Possible solutions:\n"
+                    f"  1. Use one of the existing command names listed above\n"
+                    f"  2. Verify there are no spelling errors in the command name\n"
+                    f"  3. Add the command to pyproject.toml:\n"
+                    f"\n"
+                    f"     [project.scripts]\n"
+                    f'     {command_name} = "your_module:main"'
+                )
+                raise ValueError(error_msg)
 
             use_project_mode = True
         # else: uv without command_name -> direct script mode with relative path
@@ -286,8 +368,8 @@ def _determine_param_type_and_default(
 
     if isinstance(action.default, bool):
         default_literal = "$true" if action.default else "$false"
-    elif isinstance(action.default, str):
-        default_literal = f'"{action.default}"'
+    elif isinstance(action.default, (str, Path)):
+        default_literal = _ps_single_quoted_string(str(action.default))
     else:
         default_literal = str(action.default)
 
@@ -355,8 +437,8 @@ def _build_assignment_condition(action: argparse.Action, name: str) -> str:
 
     if isinstance(action.default, bool):
         default_literal = "$true" if action.default else "$false"
-    elif isinstance(action.default, str):
-        default_literal = f'"{action.default}"'
+    elif isinstance(action.default, (str, Path)):
+        default_literal = _ps_single_quoted_string(str(action.default))
     else:
         default_literal = str(action.default)
 

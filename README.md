@@ -87,10 +87,9 @@ generate_ps1_wrapper(parser, script_path=Path(__file__))
 generate_ps1_wrapper(
     parser,
     script_path=Path(__file__),
-    project_root=Path(".."),
     command_name="my-command"  # Must exist in [project.scripts]
 )
-# Creates: & uv run --project .. my-command @args
+# Creates: & uv run --project <project-root> my-command @args
 ```
 
 ### Custom Runner

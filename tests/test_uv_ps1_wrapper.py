@@ -22,9 +22,7 @@ def test_generate_basic_wrapper():
         output_path = Path(tmpdir) / "test_script.ps1"
         script_path = Path(__file__).parent / "test_script.py"
 
-        result = generate_ps1_wrapper(
-            parser, script_path=script_path, output_path=output_path
-        )
+        result = generate_ps1_wrapper(parser, script_path=script_path, output_path=output_path)
 
         assert result == output_path
         assert output_path.exists()
@@ -67,9 +65,7 @@ def test_generate_wrapper_with_output_path():
         custom_output = Path(tmpdir) / "custom_wrapper.ps1"
         script_path = Path(__file__).parent / "test_script.py"
 
-        result = generate_ps1_wrapper(
-            parser, script_path=script_path, output_path=custom_output
-        )
+        result = generate_ps1_wrapper(parser, script_path=script_path, output_path=custom_output)
 
         assert result == custom_output
         assert custom_output.exists()
@@ -95,6 +91,21 @@ def test_type_mapping():
         # Path is mapped as string, not System.IO.FileInfo
         assert "[string]$Path" in content
         assert "[switch]$Flag" in content
+
+
+def test_path_default_is_quoted_in_param_block():
+    """Path default values must be quoted (PowerShell-safe) in the param block."""
+    parser = argparse.ArgumentParser(description="Test defaults")
+    parser.add_argument("--db", type=Path, default=Path("thumbnail_stats.db"))
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "test_defaults.ps1"
+        script_path = Path(__file__).parent / "test_script.py"
+
+        generate_ps1_wrapper(parser, script_path=script_path, output_path=output_path)
+
+        content = output_path.read_text(encoding="utf-8")
+        assert "[string]$Db = 'thumbnail_stats.db'" in content
 
 
 def test_runner_parameter():
@@ -137,9 +148,7 @@ version = "0.1.2"
 [project.scripts]
 test-command = "test_module:main"
 """
-        (project_root / "pyproject.toml").write_text(
-            pyproject_content, encoding="utf-8"
-        )
+        (project_root / "pyproject.toml").write_text(pyproject_content, encoding="utf-8")
 
         generate_ps1_wrapper(
             parser,
@@ -264,9 +273,7 @@ def test_runner_path_normalization():
         ]
 
         for runner in test_runners:
-            generate_ps1_wrapper(
-                parser, script_path=script_path, output_path=output_path, runner=runner
-            )
+            generate_ps1_wrapper(parser, script_path=script_path, output_path=output_path, runner=runner)
 
             content = output_path.read_text(encoding="utf-8")
 
